@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{box-sizing:border-box}body{margin:0}img{max-width:100%}[hidden]{display:none!important}.adbar{display:none!important}</style>
+<script>
+/* Website preview: no ads here, so ad breaks and "watch an ad" buttons continue right away. */
+window.StackBridge = { postMessage: function (raw) {
+  var m = {}; try { m = JSON.parse(raw); } catch (e) {}
+  setTimeout(function () {
+    if (m.type === "interstitial" && window.stackAdClosed) window.stackAdClosed();
+    if (m.type === "rewarded" && window.stackRewardEarned) window.stackRewardEarned();
+  }, 0);
+} };
+</script>
+</head>
+<body>
+<title>Stack a Dollar Bus Stop</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&display=swap">
+<style>
+/* Layout: one screen. Level bar, the line of riders waiting at the stop, a row of pickup bays, then the parking lot of buses on the felt; tools and ad banner space at the bottom. Same family look as the other Stack a Dollar games; one dark look by choice. */
+:root {
+  color-scheme: dark;
+  --felt: #5E9E1B; --felt-deep: #3F7A12; --bar: #17240C; --ink: #FFFFFF; --muted: #D8E8C4; --road: #2B2F27; --stripe: #E8E2C8;
+  --wood: #9A5A2E; --wood-deep: #6E3D1D; --gold: #F4B321; --gold-ink: #2A1B00;
+  --p1: #F4B321; --p2: #39B8F2; --p3: #F2456B; --p4: #F28C28; --p5: #A77BF5; --p6: #2EC4A0;
+  --font: 'Baloo 2', 'Trebuchet MS', 'Segoe UI', Arial, sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { background: var(--felt-deep); color: var(--ink); font-family: var(--font); font-size: 1rem; font-weight: 600; display: flex; flex-direction: column; overflow: hidden; -webkit-user-select: none; user-select: none; }
+button { font: inherit; color: inherit; cursor: pointer; border: none; background: none; padding: 0; }
+button:focus-visible { outline: 3px solid #FFFFFF; outline-offset: 2px; }
+
+.bar { padding-inline: 16px; padding-block: 8px; background: var(--bar); display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 2px 10px; }
+.brand { flex: 0 0 100%; text-align: center; font-weight: 800; font-size: 1.15rem; line-height: 1.1; color: var(--gold); }
+.brand span { color: var(--ink); }
+.side { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; line-height: 1.1; }
+.side.r { align-items: flex-end; }
+.side span { color: var(--muted); font-size: 0.85rem; }
+.side b { font-size: 1.7rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.goal { background: var(--gold); color: var(--gold-ink); border-radius: 10px; padding: 2px 16px; text-align: center; line-height: 1.05; }
+.goal b { display: block; font-size: 1.5rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.goal span { font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; }
+
+.stage { flex: 1 1 0; min-height: 0; padding-inline: 16px; padding-block: 10px 6px; background: radial-gradient(ellipse at 50% 40%, var(--felt) 0%, var(--felt-deep) 100%); display: flex; flex-direction: column; align-items: center; gap: 8px; overflow: hidden; }
+.label { font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); align-self: center; }
+#queue { display: flex; gap: 4px; height: 34px; align-items: flex-end; max-width: 100%; overflow: hidden; padding: 0 4px; }
+.rider { width: 20px; height: 30px; flex: none; color: var(--c); }
+.rider svg { width: 100%; height: 100%; display: block; }
+.rider.front { transform: scale(1.2); transform-origin: bottom; }
+#bays { display: flex; gap: 6px; padding: 6px; border-radius: 10px; background: var(--road); }
+.bay { width: var(--bs); height: var(--bs); border-radius: 8px; border: 2px dashed var(--stripe); opacity: 0.6; display: flex; align-items: center; justify-content: center; }
+.bay.full { opacity: 1; border: none; }
+#lot { position: relative; flex: none; background: var(--road); border-radius: 12px; box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35); }
+.bus { position: absolute; border-radius: 9px; background: var(--c); box-shadow: inset 0 -5px 0 rgba(0, 0, 0, 0.25); display: flex; align-items: center; justify-content: center; color: rgba(0, 0, 0, 0.6); transition: transform 0.3s ease-in, opacity 0.3s; }
+.bus svg { width: 54%; height: 54%; }
+.bus.fly { opacity: 0; pointer-events: none; }
+.bus.bump { animation: bump 0.3s; }
+@keyframes bump { 30% { transform: translate(var(--bx), var(--by)); } }
+.seats { display: flex; gap: 3px; }
+.seats i { width: 9px; height: 9px; border-radius: 50%; background: rgba(0, 0, 0, 0.3); }
+.seats i.on { background: #FFFFFF; }
+.bay .busmini { width: 100%; height: 100%; border-radius: 8px; background: var(--c); box-shadow: inset 0 -4px 0 rgba(0, 0, 0, 0.25); display: flex; align-items: center; justify-content: center; }
+#msg { min-height: 1.3em; text-align: center; font-weight: 800; color: var(--gold); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7); }
+
+.rack { padding-inline: 16px; padding-block: 10px 12px; background: var(--wood); border-top: 6px solid var(--wood-deep); box-shadow: inset 0 10px 14px rgba(0, 0, 0, 0.25); }
+.tools { max-width: 440px; margin-inline: auto; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.tool { min-height: 48px; border-radius: 10px; background: var(--bar); font-weight: 800; line-height: 1.1; padding: 4px; }
+.tool small { display: block; font-size: 0.72rem; color: var(--muted); font-weight: 600; }
+.tool.gold { background: var(--gold); color: var(--gold-ink); }
+.tool.gold small { color: var(--gold-ink); }
+.tool:disabled { opacity: 0.45; cursor: default; }
+
+.adbar { background: var(--bar); padding-inline: 16px; padding-block: 6px; }
+.ad { width: min(320px, 100%); height: 50px; margin-inline: auto; display: flex; align-items: center; justify-content: center; border: 1px dashed #4C6A2C; border-radius: 6px; color: #8FA878; font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; }
+.ad.live { border-color: transparent; color: transparent; }
+
+.veil { position: fixed; inset: 0; z-index: 10; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(8, 20, 2, 0.78); }
+.box { background: var(--bar); border: 3px solid var(--gold); border-radius: 14px; padding: 18px; width: 100%; max-width: 340px; display: flex; flex-direction: column; gap: 10px; text-align: center; }
+.box h2 { margin: 0; font-size: 1.5rem; font-weight: 800; color: var(--gold); line-height: 1.1; text-wrap: balance; }
+.box p { margin: 0; color: var(--muted); }
+.go { background: var(--gold); color: var(--gold-ink); border-radius: 10px; min-height: 48px; font-weight: 800; font-size: 1.1rem; }
+.go.alt { background: transparent; color: var(--ink); border: 2px solid #4C6A2C; }
+.go:disabled { opacity: 0.55; cursor: default; }
+.adfake { height: 180px; border: 1px dashed #4C6A2C; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #8FA878; letter-spacing: 0.08em; text-transform: uppercase; font-size: 0.85rem; }
+@media (prefers-reduced-motion: reduce) { .bus { transition: opacity 0.2s; } .bus.bump { animation: none; } }
+</style>
+
+<div class="bar">
+  <div class="brand">Stack a Dollar <span>Bus Stop</span></div>
+  <div class="side"><span>Riders left</span><b id="left">0</b></div>
+  <div class="goal"><b id="level">1</b><span>Level</span></div>
+  <div class="side r"><span>Buses left</span><b id="buses">0</b></div>
+</div>
+<div class="stage">
+  <div class="label">Waiting riders, front first</div>
+  <div id="queue" aria-label="Riders waiting"></div>
+  <div id="bays" aria-label="Pickup bays"></div>
+  <div id="msg" role="status" aria-live="polite">Tap a bus to drive it to a bay. Riders board their color.</div>
+  <div id="lot" aria-label="Parking lot"></div>
+</div>
+<div class="rack"><div class="tools">
+  <button class="tool" id="restart">Restart</button>
+  <button class="tool gold" id="extra">+ Bay<small>Watch an ad</small></button>
+</div></div>
+<div class="adbar"><div class="ad" id="adBanner">Ad space</div></div>
+
+<div class="veil" id="won" hidden><div class="box">
+  <h2 id="wonT">Level 1 done!</h2>
+  <p>Every rider got home.</p>
+  <button class="go" id="next">Next level</button>
+</div></div>
+<div class="veil" id="lost" hidden><div class="box">
+  <h2>Bays are full</h2>
+  <p>Watch an ad to open an extra bay and keep going.</p>
+  <button class="go" id="rescue">Keep going</button>
+  <button class="go alt" id="retry">Try again</button>
+</div></div>
+<div class="veil" id="adBreak" hidden><div class="box">
+  <p id="adLabel">Ad break</p>
+  <div class="adfake">Ad shows here in the app</div>
+  <button class="go" id="adGo" disabled>Continue</button>
+</div></div>
+
+<script>
+(function () {
+"use strict";
+var $ = function (id) { return document.getElementById(id); };
+var DIRS = [[-1, 0], [0, 1], [1, 0], [0, -1]], DNAME = ["up", "right", "down", "left"];
+var COLORS = ["--p1", "--p2", "--p3", "--p4", "--p5", "--p6"], CNAME = ["gold", "blue", "pink", "orange", "purple", "teal"];
+var CAP = 3, level = 1, N, buses, queue, bays, maxBays, start, cs = 40, busy = false;
+try { level = Math.max(1, +localStorage.getItem("sad-busstop-level") || 1); } catch (e) {}
+
+/* ---------- app bridge: the phone app connects these to AdMob and rewards ---------- */
+function post(o) { try { if (window.StackBridge && window.StackBridge.postMessage) { window.StackBridge.postMessage(JSON.stringify(o)); return true; } } catch (e) {} return false; }
+function showAd(kind, label, done) {
+  if (post({ type: kind, game: "busstop" })) { window[kind === "rewarded" ? "stackRewardEarned" : "stackAdClosed"] = function () { done(); }; return; }
+  var v = $("adBreak"), b = $("adGo"), n = kind === "rewarded" ? 5 : 3; $("adLabel").textContent = label;
+  v.hidden = false; b.disabled = true; b.textContent = "Continue in " + n;
+  var iv = setInterval(function () { n--; if (n > 0) b.textContent = "Continue in " + n; else { clearInterval(iv); b.disabled = false; b.textContent = "Continue"; b.focus(); } }, 1000);
+  b.onclick = function () { v.hidden = true; done(); };
+}
+if (post({ type: "banner", game: "busstop" })) $("adBanner").classList.add("live");
+
+/* ---------- rules ---------- */
+function at(r, c) { for (var i = 0; i < buses.length; i++) if (buses[i].on && buses[i].r === r && buses[i].c === c) return buses[i]; return null; }
+function blocker(b) { var d = DIRS[b.d], r = b.r + d[0], c = b.c + d[1]; while (r >= 0 && c >= 0 && r < N && c < N) { var x = at(r, c); if (x) return x; r += d[0]; c += d[1]; } return null; }
+/* Buses are placed so a clear exit order exists; riders line up roughly in that order, lightly mixed. */
+function makeLevel() {
+  N = Math.min(7, 4 + Math.floor(level / 3));
+  var colors = Math.min(COLORS.length, 3 + Math.floor(level / 2)), want = Math.min(N * N - 2, 6 + level * 2), cells = [];
+  for (var r = 0; r < N; r++) for (var c = 0; c < N; c++) cells.push([r, c]);
+  cells.sort(function () { return Math.random() - 0.5; });
+  buses = [];
+  for (var pass = 0; pass < 3 && buses.length < want; pass++) cells.forEach(function (p) {
+    if (buses.length >= want || at(p[0], p[1])) return;
+    var ds = [0, 1, 2, 3].sort(function () { return Math.random() - 0.5; });
+    for (var k = 0; k < 4; k++) { var b = { r: p[0], c: p[1], d: ds[k], on: true, col: Math.floor(Math.random() * colors), seats: 0 }; if (!blocker(b)) { buses.push(b); return; } }
+  });
+  buses.forEach(function (b, i) { b.id = i; });
+  queue = [];
+  buses.slice().reverse().forEach(function (b) { for (var i = 0; i < CAP; i++) queue.push(b.col); });
+  var mix = Math.min(8, 3 + Math.floor(level / 3));
+  for (var i = 0; i < queue.length; i++) { var j = Math.min(queue.length - 1, i + Math.floor(Math.random() * mix)), x = queue[i]; queue[i] = queue[j]; queue[j] = x; }
+  bays = []; maxBays = 5;
+  start = JSON.stringify({ buses: buses, queue: queue }); busy = false;
+  $("won").hidden = true; $("lost").hidden = true; say("Tap a bus to drive it to a bay. Riders board their color."); layout();
+}
+function tap(b) {
+  if (busy || !b.on) return;
+  var el = document.querySelector('[data-id="' + b.id + '"]'), d = DIRS[b.d];
+  if (bays.length >= maxBays) { say("No free bay. Fill a bus first."); return; }
+  if (blocker(b)) {
+    el.style.setProperty("--bx", d[1] * 6 + "px"); el.style.setProperty("--by", d[0] * 6 + "px");
+    el.classList.remove("bump"); void el.offsetWidth; el.classList.add("bump"); say("That bus is blocked"); return;
+  }
+  b.on = false; el.classList.add("fly"); el.style.transform = "translate(" + d[1] * N * cs + "px," + d[0] * N * cs + "px)";
+  bays.push(b); busy = true;
+  setTimeout(function () { busy = false; board(); }, 300);
+}
+function board() {
+  var moved = true;
+  while (moved && queue.length) {
+    moved = false;
+    var bus = bays.filter(function (x) { return x.col === queue[0] && x.seats < CAP; })[0];
+    if (bus) { queue.shift(); bus.seats++; moved = true; if (bus.seats >= CAP) bays.splice(bays.indexOf(bus), 1); }
+  }
+  render(); check();
+}
+function check() {
+  if (!queue.length && !buses.some(function (b) { return b.on; })) return win();
+  var canBoard = bays.some(function (x) { return queue.length && x.col === queue[0] && x.seats < CAP; });
+  if (bays.length >= maxBays && !canBoard) { busy = true; setTimeout(function () { $("lost").hidden = false; $("rescue").focus(); }, 350); }
+}
+function win() {
+  busy = true; post({ type: "levelComplete", game: "busstop", level: level });
+  $("wonT").textContent = "Level " + level + " done!";
+  level++; try { localStorage.setItem("sad-busstop-level", level); } catch (e) {}
+  setTimeout(function () { $("won").hidden = false; $("next").focus(); }, 400);
+}
+
+/* ---------- drawing ---------- */
+function say(s) { $("msg").textContent = s; }
+var ARROW = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20V5M5 11l7-7 7 7" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+var RIDER = '<svg viewBox="0 0 20 30" aria-hidden="true"><circle cx="10" cy="6" r="5" fill="currentColor"/><path d="M2 29v-9a8 8 0 0 1 16 0v9z" fill="currentColor"/></svg>';
+function layout() {
+  var st = document.querySelector(".stage"), w = st.clientWidth - 32, h = st.clientHeight - 170;
+  cs = Math.max(30, Math.floor(Math.min(60, (w - 12) / N, (h - 12) / N)));
+  document.documentElement.style.setProperty("--bs", Math.max(36, Math.min(52, Math.floor((w - 60) / 6))) + "px");
+  render();
+}
+function seatsEl(b) { var s = document.createElement("span"); s.className = "seats"; for (var i = 0; i < CAP; i++) { var d = document.createElement("i"); if (i < b.seats) d.className = "on"; s.appendChild(d); } return s; }
+function render() {
+  var q = $("queue"); q.textContent = "";
+  queue.slice(0, 14).forEach(function (c, i) { var r = document.createElement("span"); r.className = "rider" + (i === 0 ? " front" : ""); r.style.setProperty("--c", "var(" + COLORS[c] + ")"); r.innerHTML = RIDER; q.appendChild(r); });
+  q.setAttribute("aria-label", queue.length ? "Riders waiting. Front rider wants " + CNAME[queue[0]] : "No riders waiting");
+  var by = $("bays"); by.textContent = "";
+  for (var i = 0; i < maxBays; i++) {
+    var s = document.createElement("div"), b = bays[i]; s.className = "bay" + (b ? " full" : "");
+    if (b) { var m = document.createElement("div"); m.className = "busmini"; m.style.setProperty("--c", "var(" + COLORS[b.col] + ")"); m.appendChild(seatsEl(b)); s.appendChild(m); s.setAttribute("aria-label", CNAME[b.col] + " bus, " + b.seats + " of " + CAP + " seats taken"); }
+    else s.setAttribute("aria-label", "Empty bay");
+    by.appendChild(s);
+  }
+  var lot = $("lot"), pad = 6; lot.style.width = (N * cs + pad * 2) + "px"; lot.style.height = (N * cs + pad * 2) + "px"; lot.textContent = "";
+  buses.forEach(function (b) {
+    if (!b.on) return;
+    var el = document.createElement("button"); el.className = "bus"; el.dataset.id = b.id;
+    el.style.setProperty("--c", "var(" + COLORS[b.col] + ")");
+    el.style.width = (cs - 6) + "px"; el.style.height = (cs - 6) + "px"; el.style.left = (pad + b.c * cs + 3) + "px"; el.style.top = (pad + b.r * cs + 3) + "px";
+    el.innerHTML = ARROW; el.firstChild.style.transform = "rotate(" + b.d * 90 + "deg)";
+    el.setAttribute("aria-label", CNAME[b.col] + " bus facing " + DNAME[b.d]);
+    el.addEventListener("click", function () { tap(b); });
+    lot.appendChild(el);
+  });
+  $("left").textContent = queue.length; $("level").textContent = level; $("buses").textContent = buses.filter(function (b) { return b.on; }).length;
+  $("extra").disabled = maxBays >= 6;
+}
+
+$("restart").addEventListener("click", function () { var s = JSON.parse(start); buses = s.buses; queue = s.queue; bays = []; maxBays = 5; busy = false; say(""); render(); });
+$("extra").addEventListener("click", function () { if (maxBays >= 6) return; showAd("rewarded", "Watch to open an extra bay", function () { maxBays = 6; say("Extra bay open"); render(); }); });
+$("rescue").addEventListener("click", function () { $("lost").hidden = true; showAd("rewarded", "Watch to open an extra bay", function () { maxBays++; busy = false; say("Extra bay open"); render(); }); });
+$("retry").addEventListener("click", function () { $("lost").hidden = true; showAd("interstitial", "Ad break", function () { $("restart").click(); }); });
+$("next").addEventListener("click", function () { $("won").hidden = true; if ((level - 1) % 2 === 0) showAd("interstitial", "Ad break", makeLevel); else makeLevel(); });
+window.addEventListener("resize", layout);
+makeLevel();
+})();
+</script>
+
+</body>
+</html>

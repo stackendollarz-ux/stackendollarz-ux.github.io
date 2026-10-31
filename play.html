@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Play the games | Stack a Dollar</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@800&family=Nunito+Sans:wght@400;700&display=swap">
+<style>
+:root { --green: #2F5A12; --deep: #17240C; --gold: #F4B321; --ink: #1B1F17; --muted: #55604A; --bg: #FBF8EE; --line: #E2DCC8; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 17px/1.6 'Nunito Sans', 'Segoe UI', Arial, sans-serif; }
+header { background: var(--deep); padding: 14px 16px; }
+header a { color: var(--gold); text-decoration: none; font: 800 1.2rem 'Baloo 2', 'Trebuchet MS', sans-serif; }
+header a span { color: #fff; }
+main { max-width: 720px; margin: 0 auto; padding: 24px 16px 48px; }
+h1 { font: 800 2rem/1.15 'Baloo 2', 'Trebuchet MS', sans-serif; margin: 0.4em 0 0.2em; color: var(--deep); text-wrap: balance; }
+h2 { font: 800 1.3rem/1.2 'Baloo 2', 'Trebuchet MS', sans-serif; margin: 1.6em 0 0.4em; color: var(--green); }
+.meta, .small { color: var(--muted); font-size: 0.9rem; }
+a { color: var(--green); }
+li { margin: 0.25em 0; }
+.hero { padding: 16px 0; }
+.eyebrow { text-transform: uppercase; letter-spacing: 0.08em; font-weight: 800; color: var(--green); font-size: 0.8rem; margin: 0; }
+.lead { font-size: 1.15rem; }
+.links { display: grid; gap: 12px; margin: 20px 0; }
+.card { display: block; padding: 14px 16px; border: 2px solid var(--line); border-radius: 12px; background: #fff; text-decoration: none; color: var(--ink); }
+.card:hover { border-color: var(--gold); }
+.card span { display: block; color: var(--muted); font-size: 0.9rem; }
+.ctas { display: flex; flex-wrap: wrap; gap: 10px; margin: 16px 0 8px; }
+.btn { display: inline-flex; align-items: center; min-height: 48px; padding: 0 22px; border-radius: 26px; background: var(--gold); color: var(--deep); font-weight: 800; text-decoration: none; }
+.btn.alt { background: var(--deep); color: var(--gold); }
+.games { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-top: 18px; }
+.game { display: flex; flex-direction: column; gap: 4px; padding: 14px; border-radius: 14px; background: var(--deep); color: #fff; text-decoration: none; min-height: 120px; }
+.game:hover { outline: 3px solid var(--gold); }
+.game .kind { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--gold); font-weight: 800; }
+.game strong { font: 800 1.15rem 'Baloo 2', 'Trebuchet MS', sans-serif; }
+.game span:last-child { font-size: 0.85rem; color: #D8E8C4; }
+footer { border-top: 1px solid var(--line); padding: 16px; text-align: center; font-size: 0.85rem; color: var(--muted); }
+footer a { margin: 0 8px; }
+</style>
+</head>
+<body>
+<header><a href="index.html">Stack a Dollar <span>Coins</span></a></header>
+<main>
+<h1>Play the games</h1>
+<p class="lead">22 free games, made for Stack a Dollar. In the app, playing earns coins. Here, they're just for fun.</p>
+<p><a class="btn" href="join.html">Join early access</a></p>
+<div class="games">
+<a class="game" href="games/stackman.html"><span class="kind">Arcade</span><strong>Stack Man</strong><span>Grab coins and dodge the Bankruptcy Ghosts.</span></a>
+<a class="game" href="games/stacktzy.html"><span class="kind">Dice</span><strong>Stacktzy</strong><span>Roll five dice and stack the best score.</span></a>
+<a class="game" href="games/blocks.html"><span class="kind">Puzzle</span><strong>Blocks</strong><span>Fit blocks and clear rows and columns.</span></a>
+<a class="game" href="games/triple.html"><span class="kind">Puzzle</span><strong>Triple</strong><span>Match three tiles to clear the board.</span></a>
+<a class="game" href="games/pour.html"><span class="kind">Puzzle</span><strong>Pour</strong><span>Sort the colors into matching tubes.</span></a>
+<a class="game" href="games/mahjong.html"><span class="kind">Puzzle</span><strong>Mahjong</strong><span>Pair the free tiles to clear the stack.</span></a>
+<a class="game" href="games/words.html"><span class="kind">Word</span><strong>Words</strong><span>Swipe letters to fill the crossword.</span></a>
+<a class="game" href="games/stackle.html"><span class="kind">Word</span><strong>Stackle</strong><span>Guess the 5-letter word in six tries.</span></a>
+<a class="game" href="games/solitaire.html"><span class="kind">Cards</span><strong>Solitaire</strong><span>The classic card game.</span></a>
+<a class="game" href="games/spider.html"><span class="kind">Cards</span><strong>Spider</strong><span>Build runs from King to Ace.</span></a>
+<a class="game" href="games/chess.html"><span class="kind">Board</span><strong>Chess</strong><span>Play the computer on three levels.</span></a>
+<a class="game" href="games/checkers.html"><span class="kind">Board</span><strong>Checkers</strong><span>Jump and king your way to a win.</span></a>
+<a class="game" href="games/merge.html"><span class="kind">Puzzle</span><strong>Merge</strong><span>Merge coin stacks up to 2,048.</span></a>
+<a class="game" href="games/maze.html"><span class="kind">Arcade</span><strong>Coin Run</strong><span>Collect cash and dodge bill collectors.</span></a>
+<a class="game" href="games/shooter.html"><span class="kind">Arcade</span><strong>Sky Guard</strong><span>Guard the vault from waves of drones.</span></a>
+<a class="game" href="games/tapaway.html"><span class="kind">Puzzle</span><strong>Tap Away</strong><span>Slide the bricks out in the right order.</span></a>
+<a class="game" href="games/busstop.html"><span class="kind">Puzzle</span><strong>Bus Stop</strong><span>Get every rider on the right bus.</span></a>
+<a class="game" href="games/bolts.html"><span class="kind">Puzzle</span><strong>Bolts</strong><span>Unscrew bolts and drop the planks.</span></a>
+<a class="game" href="games/blocksudoku.html"><span class="kind">Puzzle</span><strong>Block Sudoku</strong><span>Clear rows, columns and boxes.</span></a>
+<a class="game" href="games/ballsort.html"><span class="kind">Puzzle</span><strong>Ball Sort</strong><span>Sort the balls by color.</span></a>
+<a class="game" href="games/wordsearch.html"><span class="kind">Word</span><strong>Word Search</strong><span>Find the hidden words.</span></a>
+<a class="game" href="games/scramble.html"><span class="kind">Word</span><strong>Scramble</strong><span>Unscramble words against the clock.</span></a>
+</div>
+</main>
+<footer><a href="play.html">Games</a><a href="join.html">Early access</a><a href="terms.html">Terms</a><a href="privacy.html">Privacy</a><a href="delete-account.html">Delete account</a></footer>
+</body>
+</html>

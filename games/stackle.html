@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{box-sizing:border-box}body{margin:0}img{max-width:100%}[hidden]{display:none!important}.adbar{display:none!important}</style>
+<script>
+/* Website preview: no ads here, so ad breaks and "watch an ad" buttons continue right away. */
+window.StackBridge = { postMessage: function (raw) {
+  var m = {}; try { m = JSON.parse(raw); } catch (e) {}
+  setTimeout(function () {
+    if (m.type === "interstitial" && window.stackAdClosed) window.stackAdClosed();
+    if (m.type === "rewarded" && window.stackRewardEarned) window.stackRewardEarned();
+  }, 0);
+} };
+</script>
+</head>
+<body>
+<title>Stackle</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&display=swap">
+<style>
+/* Layout: one screen. Streak bar, a 6-row grid of letter tiles on the felt, an on-screen keyboard on the wooden rack, ad banner space. Gold means right spot, blue means in the word. Same family look as the other Stack a Dollar games; one dark look by choice. */
+:root {
+  color-scheme: dark;
+  --felt: #5E9E1B; --felt-deep: #3F7A12; --bar: #17240C; --well: #24380F; --ink: #FFFFFF; --muted: #D8E8C4;
+  --wood: #9A5A2E; --wood-deep: #6E3D1D; --gold: #F4B321; --gold-ink: #2A1B00;
+  --p1: #F4B321; --p2: #39B8F2; --p3: #F2456B; --p4: #F28C28; --p5: #A77BF5; --p6: #2EC4A0;
+  --card: #FBF8EE; --edge: #B9AE93; --black: #18140F; --red: #C4162E;
+  --font: 'Baloo 2', 'Trebuchet MS', 'Segoe UI', Arial, sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { background: var(--felt-deep); color: var(--ink); font-family: var(--font); font-size: 1rem; font-weight: 600; display: flex; flex-direction: column; overflow: hidden; -webkit-user-select: none; user-select: none; }
+button { font: inherit; color: inherit; cursor: pointer; border: none; background: none; padding: 0; }
+button:focus-visible { outline: 3px solid #FFFFFF; outline-offset: 2px; }
+.bar { padding-inline: 16px; padding-block: 8px; background: var(--bar); display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 2px 10px; }
+.brand { flex: 0 0 100%; text-align: center; font-weight: 800; font-size: 1.15rem; line-height: 1.1; color: var(--gold); }
+.brand span { color: var(--ink); }
+.side { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; line-height: 1.1; }
+.side.r { align-items: flex-end; }
+.side span { color: var(--muted); font-size: 0.85rem; }
+.side b { font-size: 1.7rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.goal { background: var(--gold); color: var(--gold-ink); border-radius: 10px; padding: 2px 16px; text-align: center; line-height: 1.05; }
+.goal b { display: block; font-size: 1.5rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.goal span { font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; }
+.new { border: 2px solid #4C6A2C; border-radius: 8px; min-height: 40px; padding: 0 10px; font-size: 0.9rem; }
+.stage { position: relative; flex: 1 1 0; min-height: 0; padding-inline: 16px; padding-block: 12px 8px; background: radial-gradient(ellipse at 50% 40%, var(--felt) 0%, var(--felt-deep) 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; overflow: hidden; }
+#msg { min-height: 1.4em; text-align: center; font-weight: 800; color: var(--gold); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7); max-width: 460px; }
+.rack { padding-inline: 16px; padding-block: 10px 12px; background: var(--wood); border-top: 6px solid var(--wood-deep); box-shadow: inset 0 10px 14px rgba(0, 0, 0, 0.25); }
+.tools { max-width: 440px; margin-inline: auto; display: grid; grid-template-columns: repeat(var(--n, 2), minmax(0, 1fr)); gap: 8px; }
+.tool { min-height: 48px; border-radius: 10px; background: var(--bar); font-weight: 800; line-height: 1.1; padding: 4px; }
+.tool small { display: block; font-size: 0.72rem; color: var(--muted); font-weight: 600; }
+.tool.gold { background: var(--gold); color: var(--gold-ink); }
+.tool.gold small { color: var(--gold-ink); }
+.tool:disabled { opacity: 0.45; cursor: default; }
+.adbar { background: var(--bar); padding-inline: 16px; padding-block: 6px; }
+.ad { width: min(320px, 100%); height: 50px; margin-inline: auto; display: flex; align-items: center; justify-content: center; border: 1px dashed #4C6A2C; border-radius: 6px; color: #8FA878; font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; }
+.ad.live { border-color: transparent; color: transparent; }
+.veil { position: fixed; inset: 0; z-index: 10; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(8, 20, 2, 0.78); }
+.box { background: var(--bar); border: 3px solid var(--gold); border-radius: 14px; padding: 18px; width: 100%; max-width: 340px; display: flex; flex-direction: column; gap: 10px; text-align: center; }
+.box h2 { margin: 0; font-size: 1.5rem; font-weight: 800; color: var(--gold); line-height: 1.1; text-wrap: balance; }
+.box p { margin: 0; color: var(--muted); }
+.box .big { font-size: 2.6rem; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+.go { background: var(--gold); color: var(--gold-ink); border-radius: 10px; min-height: 48px; font-weight: 800; font-size: 1.1rem; }
+.go.alt { background: transparent; color: var(--ink); border: 2px solid #4C6A2C; }
+.go:disabled { opacity: 0.55; cursor: default; }
+.adfake { height: 180px; border: 1px dashed #4C6A2C; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #8FA878; letter-spacing: 0.08em; text-transform: uppercase; font-size: 0.85rem; }
+
+:root { --hit: #F4B321; --near: #39B8F2; --miss: #2B3A1E; }
+#grid { display: grid; grid-template-rows: repeat(var(--rows, 6), 1fr); gap: 5px; width: min(100%, 300px, calc((100dvh - 420px) * 5 / 6)); min-width: 220px; }
+.gr { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; }
+.gr.no { animation: shake 0.35s; }
+.tl { aspect-ratio: 1; border-radius: 8px; border: 2px solid rgba(255, 255, 255, 0.25); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: clamp(1.2rem, 6vw, 1.9rem); line-height: 1; background: rgba(0, 0, 0, 0.15); }
+.tl.typed { border-color: var(--card); }
+.tl.hit, .tl.near, .tl.miss { border-color: transparent; animation: flip 0.4s ease-out both; }
+.tl.hit { background: var(--hit); color: var(--gold-ink); }
+.tl.near { background: var(--near); color: #06263A; }
+.tl.miss { background: var(--miss); color: var(--muted); }
+.tl:nth-child(2) { animation-delay: 0.08s; } .tl:nth-child(3) { animation-delay: 0.16s; } .tl:nth-child(4) { animation-delay: 0.24s; } .tl:nth-child(5) { animation-delay: 0.32s; }
+@keyframes flip { from { transform: rotateX(90deg); } }
+@keyframes shake { 25% { translate: -6px 0; } 75% { translate: 6px 0; } }
+.kb { display: flex; flex-direction: column; gap: 6px; max-width: 480px; margin-inline: auto; }
+.kr { display: flex; gap: 4px; justify-content: center; }
+.k { flex: 1 1 0; min-width: 0; height: 48px; border-radius: 7px; background: var(--card); color: var(--black); font-weight: 800; font-size: 1.05rem; box-shadow: 0 2px 0 var(--edge); }
+.k.wide { flex: 1.6 1 0; font-size: 0.8rem; background: var(--bar); color: var(--ink); box-shadow: none; }
+.k.hit { background: var(--hit); color: var(--gold-ink); }
+.k.near { background: var(--near); color: #06263A; }
+.k.miss { background: var(--miss); color: var(--muted); box-shadow: none; }
+.minitools { display: flex; gap: 8px; justify-content: center; }
+.minitools .tool { min-width: 130px; }
+.legend { display: flex; gap: 12px; font-size: 0.8rem; color: var(--muted); }
+.legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -1px; margin-right: 4px; }
+@media (prefers-reduced-motion: reduce) { .tl.hit, .tl.near, .tl.miss, .gr.no { animation: none; } }
+</style>
+
+<div class="bar">
+  <div class="brand">Stack a Dollar <span>Stackle</span></div>
+  <div class="side"><span>Solved</span><b id="solved">0</b></div>
+  <div class="goal"><b id="streak">0</b><span>Streak</span></div>
+  <div class="side r"><span>Best streak</span><b id="bestS">0</b></div>
+</div>
+<div class="stage">
+  <div class="legend" aria-hidden="true"><span><i style="background: var(--hit)"></i>Right spot</span><span><i style="background: var(--near)"></i>In the word</span><span><i style="background: var(--miss)"></i>Not in it</span></div>
+  <div id="grid" aria-label="Guesses"></div>
+  <div id="msg" role="status" aria-live="polite">Guess the 5-letter word in 6 tries</div>
+  <div class="minitools"><button class="tool gold" id="hint">Reveal a letter<small>Watch an ad</small></button></div>
+</div>
+<div class="rack"><div class="kb" id="kb"></div></div>
+<div class="adbar"><div class="ad" id="adBanner">Ad space</div></div>
+<div class="veil" id="adBreak" hidden><div class="box">
+  <p id="adLabel">Ad break</p>
+  <div class="adfake">Ad shows here in the app</div>
+  <button class="go" id="adGo" disabled>Continue</button>
+</div></div>
+<div class="veil" id="over" hidden><div class="box">
+  <h2 id="overT">You got it!</h2>
+  <p id="overP"></p>
+  <button class="go" id="extra" hidden>One more guess<br><small>Watch an ad</small></button>
+  <button class="go" id="next">Next word</button>
+</div></div>
+
+<script>
+(function () {
+"use strict";
+var $ = function (id) { return document.getElementById(id); }, GAME = "stackle";
+/* ---------- app bridge: the phone app connects these to AdMob and rewards ---------- */
+function post(o) { o.game = GAME; try { if (window.StackBridge && window.StackBridge.postMessage) { window.StackBridge.postMessage(JSON.stringify(o)); return true; } } catch (e) {} return false; }
+function showAd(kind, label, done) {
+  if (post({ type: kind })) { window[kind === "rewarded" ? "stackRewardEarned" : "stackAdClosed"] = function () { done(); }; return; }
+  var v = $("adBreak"), b = $("adGo"), n = kind === "rewarded" ? 5 : 3; $("adLabel").textContent = label || "Ad break";
+  v.hidden = false; b.disabled = true; b.textContent = "Continue in " + n;
+  var iv = setInterval(function () { n--; if (n > 0) b.textContent = "Continue in " + n; else { clearInterval(iv); b.disabled = false; b.textContent = "Continue"; b.focus(); } }, 1000);
+  b.onclick = function () { v.hidden = true; done(); };
+}
+if (post({ type: "banner" })) $("adBanner").classList.add("live");
+function store(k, v) { try { if (v === undefined) return localStorage.getItem("sad-" + GAME + "-" + k); localStorage.setItem("sad-" + GAME + "-" + k, v); } catch (e) { return null; } }
+
+var WORDS = "ABOUT ABOVE ACTOR ACUTE ADULT AFTER AGAIN AGENT AGREE AHEAD ALARM ALBUM ALERT ALIKE ALIVE ALLOW ALONE ALONG ALTER AMONG ANGEL ANGER ANGLE ANGRY APART APPLE APPLY ARENA ARGUE ARISE ARMOR ARRAY ARROW ASIDE ASSET AUDIO AVOID AWARD AWARE AWFUL BACON BADGE BAKER BASIC BASIN BATCH BEACH BEARD BEAST BEGIN BEING BELOW BENCH BERRY BIRTH BLACK BLADE BLAME BLANK BLAST BLAZE BLEND BLESS BLIND BLOCK BLOOD BLOOM BOARD BOAST BONUS BOOST BOOTH BOUND BRAIN BRAND BRASS BRAVE BREAD BREAK BRICK BRIDE BRIEF BRING BROAD BROOK BROWN BRUSH BUILD BUNCH BURST BUYER CABIN CABLE CAMEL CANDY CARGO CARRY CATCH CAUSE CHAIN CHAIR CHALK CHARM CHART CHASE CHEAP CHECK CHEEK CHEER CHESS CHEST CHIEF CHILD CHILL CHOIR CIVIL CLAIM CLASS CLEAN CLEAR CLERK CLICK CLIFF CLIMB CLOCK CLOSE CLOTH CLOUD COACH COAST COLOR COUCH COULD COUNT COURT COVER CRACK CRAFT CRANE CRASH CRAZY CREAM CRIME CRISP CROWD CROWN CRUST CURVE CYCLE DAILY DAIRY DANCE DEALT DEATH DEBUT DELAY DEPTH DIRTY DIZZY DOUGH DRAFT DRAIN DRAMA DREAM DRESS DRIFT DRINK DRIVE EAGER EAGLE EARLY EARTH EIGHT ELBOW ELDER EMPTY ENEMY ENJOY ENTER ENTRY EQUAL ERROR EVENT EVERY EXACT EXIST EXTRA FABLE FAINT FAIRY FAITH FALSE FANCY FEAST FENCE FEVER FIBER FIELD FIFTH FIFTY FIGHT FINAL FIRST FLAME FLASH FLEET FLOCK FLOOR FLOUR FLUID FOCUS FORCE FORTY FOUND FRAME FRESH FRONT FROST FRUIT FUNNY GIANT GIVEN GLASS GLOBE GLORY GLOVE GRACE GRADE GRAIN GRAND GRANT GRAPE GRASS GREAT GREEN GREET GRILL GROSS GROUP GUARD GUESS GUEST GUIDE HABIT HAPPY HARSH HEART HEAVY HELLO HONEY HONOR HORSE HOTEL HOUSE HUMAN HUMOR HURRY IDEAL IMAGE INDEX INNER INPUT ISSUE JELLY JEWEL JOINT JUDGE JUICE KNIFE KNOCK KNOWN LABEL LARGE LASER LATER LAUGH LAYER LEARN LEASE LEAST LEAVE LEGAL LEMON LEVEL LIGHT LIMIT LINEN LIVER LOCAL LODGE LOGIC LOOSE LUCKY LUNCH MAGIC MAJOR MAKER MANGO MAPLE MARCH MATCH MAYBE MAYOR MEDAL METAL METER MIGHT MINOR MODEL MONEY MONTH MORAL MOTOR MOUNT MOUSE MOUTH MOVIE MUSIC NERVE NEVER NIGHT NOBLE NOISE NORTH NOVEL NURSE OCEAN OFFER OFTEN OLIVE ONION OPERA ORBIT ORDER OTHER OUGHT OUNCE OUTER OWNER PAINT PANEL PAPER PARTY PASTA PATCH PEACE PEACH PEARL PENNY PHASE PHONE PHOTO PIANO PIECE PILOT PITCH PIZZA PLACE PLAIN PLANE PLANT PLATE POINT POLAR POUND POWER PRESS PRICE PRIDE PRIME PRINT PRIZE PROOF PROUD PROVE PULSE PUNCH PUPIL QUICK QUIET QUILT QUITE QUOTE RADIO RAISE RANCH RANGE RAPID RATIO REACH READY REALM RELAX REPLY RHYME RIDER RIDGE RIFLE RIGHT RIGID RIVER ROAST ROBOT ROCKY ROUND ROUTE ROYAL RUGBY RULER RURAL SALAD SAUCE SCALE SCENE SCENT SCOPE SCORE SCOUT SENSE SERVE SEVEN SHADE SHAKE SHAPE SHARE SHARK SHARP SHEEP SHEET SHELF SHELL SHIFT SHINE SHIRT SHOCK SHOOT SHORE SHORT SHOUT SIGHT SKILL SKIRT SLICE SLIDE SLOPE SMALL SMART SMILE SMOKE SNACK SNAKE SOLAR SOLID SOLVE SOUND SOUTH SPACE SPARE SPARK SPEAK SPEED SPEND SPICE SPINE SPOON SPORT SPRAY SQUAD STACK STAFF STAGE STAIR STAKE STAMP STAND START STATE STEAK STEAM STEEL STICK STILL STOCK STONE STOOL STORM STORY STOVE STRAP STRAW STRIP STUDY STUFF STYLE SUGAR SUITE SUNNY SUPER SWEET SWIFT SWING TABLE TASTE TEACH TEETH THANK THEME THICK THING THINK THIRD THREE THROW THUMB TIGER TIGHT TIMER TITLE TOAST TODAY TOKEN TOOTH TOPIC TORCH TOTAL TOUCH TOUGH TOWER TOXIC TRACK TRADE TRAIL TRAIN TREAT TREND TRIAL TRIBE TRICK TRUCK TRULY TRUST TRUTH TWICE UNCLE UNDER UNION UNITY UPPER UPSET URBAN USUAL VALID VALUE VIDEO VITAL VIVID VOCAL VOICE WAGON WASTE WATCH WATER WHALE WHEAT WHEEL WHERE WHILE WHITE WHOLE WOMAN WORLD WORRY WORTH WOULD WOUND WRITE WRONG YACHT YIELD YOUNG YOUTH ZEBRA".split(" ");
+var answer, rows, cur, maxRows, done, keyState, revealed, solved = +store("solved") || 0, streak = +store("streak") || 0, bestS = +store("best") || 0, plays = 0;
+
+function newWord() {
+  answer = WORDS[Math.floor(Math.random() * WORDS.length)];
+  rows = []; cur = ""; maxRows = 6; done = false; keyState = {}; revealed = {};
+  $("over").hidden = true; $("extra").hidden = true; say("Guess the 5-letter word in 6 tries"); render();
+}
+function score(g) {
+  var res = ["miss", "miss", "miss", "miss", "miss"], left = {};
+  for (var i = 0; i < 5; i++) { if (g[i] === answer[i]) res[i] = "hit"; else left[answer[i]] = (left[answer[i]] || 0) + 1; }
+  for (i = 0; i < 5; i++) if (res[i] !== "hit" && left[g[i]]) { res[i] = "near"; left[g[i]]--; }
+  return res;
+}
+var RANK = { miss: 1, near: 2, hit: 3 };
+function submit() {
+  if (done) return;
+  if (cur.length < 5) return bad("Not enough letters");
+  if (!/[AEIOUY]/.test(cur)) return bad("That doesn't look like a word");
+  var res = score(cur); rows.push({ w: cur, r: res });
+  for (var i = 0; i < 5; i++) { var k = cur[i]; if (!keyState[k] || RANK[res[i]] > RANK[keyState[k]]) keyState[k] = res[i]; }
+  var won = cur === answer; cur = ""; render();
+  if (won) return finish(true);
+  if (rows.length >= maxRows) return finish(false);
+  say("");
+}
+function finish(won) {
+  done = true;
+  if (won) { solved++; streak++; if (streak > bestS) bestS = streak; } else if (maxRows > 6) streak = 0;
+  store("solved", solved); store("streak", streak); store("best", bestS);
+  post({ type: "gameOver", won: won, guesses: rows.length });
+  $("overT").textContent = won ? ["Genius!", "Amazing!", "Great!", "Nice!", "Good!", "Phew!", "Clutch!"][rows.length - 1] || "Got it!" : "Out of guesses";
+  $("overP").textContent = won ? "Solved in " + rows.length + (rows.length === 1 ? " guess." : " guesses.") : "The word was " + answer + ".";
+  $("extra").hidden = won || maxRows > 6;
+  if (!won && maxRows === 6) $("overP").textContent = "So close! Watch an ad for one more guess, or see the answer.";
+  $("next").textContent = !won && maxRows === 6 ? "Show answer" : "Next word";
+  render();
+  setTimeout(function () { $("over").hidden = false; ($("extra").hidden ? $("next") : $("extra")).focus(); }, 700);
+}
+function bad(s) { say(s); var r = $("grid").children[rows.length]; if (r) { r.classList.remove("no"); void r.offsetWidth; r.classList.add("no"); } }
+function key(k) {
+  if (done) return;
+  if (k === "ENTER") return submit();
+  if (k === "BACK") { cur = cur.slice(0, -1); return render(); }
+  if (cur.length < 5 && /^[A-Z]$/.test(k)) { cur += k; render(); }
+}
+
+function say(s) { $("msg").textContent = s; }
+function render() {
+  var g = $("grid"); g.style.setProperty("--rows", maxRows); g.textContent = "";
+  for (var r = 0; r < maxRows; r++) {
+    var row = document.createElement("div"), data = rows[r], typing = r === rows.length && !done;
+    row.className = "gr";
+    var label = data ? data.w + ": " + data.r.map(function (x, i) { return data.w[i] + " " + (x === "hit" ? "right spot" : x === "near" ? "in the word" : "not in it"); }).join(", ") : typing && cur ? "Typing " + cur : "Empty row";
+    row.setAttribute("aria-label", label);
+    for (var c = 0; c < 5; c++) {
+      var t = document.createElement("div"), ch = data ? data.w[c] : typing ? cur[c] || (revealed[c] && !cur.length ? "" : "") : "";
+      t.className = "tl" + (data ? " " + data.r[c] : ch ? " typed" : "");
+      t.textContent = ch || (typing && revealed[c] && !cur[c] ? "" : "");
+      if (typing && !cur[c] && revealed[c]) { t.textContent = revealed[c]; t.style.opacity = "0.45"; }
+      row.appendChild(t);
+    }
+    g.appendChild(row);
+  }
+  var kb = $("kb"); kb.textContent = "";
+  ["QWERTYUIOP", "ASDFGHJKL", "+ZXCVBNM-"].forEach(function (line) {
+    var kr = document.createElement("div"); kr.className = "kr";
+    line.split("").forEach(function (ch) {
+      var b = document.createElement("button"), k = ch === "+" ? "ENTER" : ch === "-" ? "BACK" : ch;
+      b.className = "k" + (ch === "+" || ch === "-" ? " wide" : "") + (keyState[k] ? " " + keyState[k] : "");
+      b.textContent = ch === "+" ? "Enter" : ch === "-" ? "Delete" : ch;
+      b.setAttribute("aria-label", ch === "+" ? "Enter" : ch === "-" ? "Delete" : ch + (keyState[k] ? ", " + (keyState[k] === "hit" ? "right spot" : keyState[k] === "near" ? "in the word" : "not in the word") : ""));
+      b.addEventListener("click", function () { key(k); });
+      kr.appendChild(b);
+    });
+    kb.appendChild(kr);
+  });
+  $("solved").textContent = solved; $("streak").textContent = streak; $("bestS").textContent = bestS;
+  $("hint").disabled = done || Object.keys(revealed).length >= 2;
+}
+
+document.addEventListener("keydown", function (e) {
+  if (e.ctrlKey || e.metaKey || e.altKey || !$("over").hidden || !$("adBreak").hidden) return;
+  if (e.key === "Enter") key("ENTER"); else if (e.key === "Backspace") key("BACK"); else if (/^[a-z]$/i.test(e.key)) key(e.key.toUpperCase());
+});
+$("hint").addEventListener("click", function () {
+  if (done) return;
+  showAd("rewarded", "Watch to reveal a letter", function () {
+    var spots = [0, 1, 2, 3, 4].filter(function (i) { return !revealed[i] && !rows.some(function (r) { return r.r[i] === "hit"; }); });
+    if (!spots.length) return say("You already have every letter's spot");
+    var i = spots[Math.floor(Math.random() * spots.length)]; revealed[i] = answer[i];
+    say("Letter " + (i + 1) + " is " + answer[i]); render();
+  });
+});
+$("extra").addEventListener("click", function () { $("over").hidden = true; showAd("rewarded", "Watch for one more guess", function () { maxRows = 7; done = false; say("One more try!"); render(); }); });
+$("next").addEventListener("click", function () {
+  if ($("next").textContent === "Show answer") { streak = 0; store("streak", 0); $("overP").textContent = "The word was " + answer + "."; $("extra").hidden = true; $("next").textContent = "Next word"; render(); return; }
+  $("over").hidden = true; plays++; if (plays % 2 === 0) showAd("interstitial", "", newWord); else newWord();
+});
+newWord();
+})();
+</script>
+
+</body>
+</html>

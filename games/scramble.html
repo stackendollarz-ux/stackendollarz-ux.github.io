@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{box-sizing:border-box}body{margin:0}img{max-width:100%}[hidden]{display:none!important}.adbar{display:none!important}</style>
+<script>
+/* Website preview: no ads here, so ad breaks and "watch an ad" buttons continue right away. */
+window.StackBridge = { postMessage: function (raw) {
+  var m = {}; try { m = JSON.parse(raw); } catch (e) {}
+  setTimeout(function () {
+    if (m.type === "interstitial" && window.stackAdClosed) window.stackAdClosed();
+    if (m.type === "rewarded" && window.stackRewardEarned) window.stackRewardEarned();
+  }, 0);
+} };
+</script>
+</head>
+<body>
+<title>Stack a Dollar Scramble</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&display=swap">
+<style>
+/* Layout: one screen. Score and timer bar, answer slots on the felt above a row of scrambled letter tiles, tools and ad banner space. Same family look as the other Stack a Dollar games; one dark look by choice. */
+:root {
+  color-scheme: dark;
+  --felt: #5E9E1B; --felt-deep: #3F7A12; --bar: #17240C; --well: #24380F; --ink: #FFFFFF; --muted: #D8E8C4;
+  --wood: #9A5A2E; --wood-deep: #6E3D1D; --gold: #F4B321; --gold-ink: #2A1B00;
+  --p1: #F4B321; --p2: #39B8F2; --p3: #F2456B; --p4: #F28C28; --p5: #A77BF5; --p6: #2EC4A0;
+  --card: #FBF8EE; --edge: #B9AE93; --black: #18140F; --red: #C4162E;
+  --font: 'Baloo 2', 'Trebuchet MS', 'Segoe UI', Arial, sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { background: var(--felt-deep); color: var(--ink); font-family: var(--font); font-size: 1rem; font-weight: 600; display: flex; flex-direction: column; overflow: hidden; -webkit-user-select: none; user-select: none; }
+button { font: inherit; color: inherit; cursor: pointer; border: none; background: none; padding: 0; }
+button:focus-visible { outline: 3px solid #FFFFFF; outline-offset: 2px; }
+.bar { padding-inline: 16px; padding-block: 8px; background: var(--bar); display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 2px 10px; }
+.brand { flex: 0 0 100%; text-align: center; font-weight: 800; font-size: 1.15rem; line-height: 1.1; color: var(--gold); }
+.brand span { color: var(--ink); }
+.side { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; line-height: 1.1; }
+.side.r { align-items: flex-end; }
+.side span { color: var(--muted); font-size: 0.85rem; }
+.side b { font-size: 1.7rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.goal { background: var(--gold); color: var(--gold-ink); border-radius: 10px; padding: 2px 16px; text-align: center; line-height: 1.05; }
+.goal b { display: block; font-size: 1.5rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.goal span { font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; }
+.new { border: 2px solid #4C6A2C; border-radius: 8px; min-height: 40px; padding: 0 10px; font-size: 0.9rem; }
+.stage { position: relative; flex: 1 1 0; min-height: 0; padding-inline: 16px; padding-block: 12px 8px; background: radial-gradient(ellipse at 50% 40%, var(--felt) 0%, var(--felt-deep) 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; overflow: hidden; }
+#msg { min-height: 1.4em; text-align: center; font-weight: 800; color: var(--gold); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7); max-width: 460px; }
+.rack { padding-inline: 16px; padding-block: 10px 12px; background: var(--wood); border-top: 6px solid var(--wood-deep); box-shadow: inset 0 10px 14px rgba(0, 0, 0, 0.25); }
+.tools { max-width: 440px; margin-inline: auto; display: grid; grid-template-columns: repeat(var(--n, 2), minmax(0, 1fr)); gap: 8px; }
+.tool { min-height: 48px; border-radius: 10px; background: var(--bar); font-weight: 800; line-height: 1.1; padding: 4px; }
+.tool small { display: block; font-size: 0.72rem; color: var(--muted); font-weight: 600; }
+.tool.gold { background: var(--gold); color: var(--gold-ink); }
+.tool.gold small { color: var(--gold-ink); }
+.tool:disabled { opacity: 0.45; cursor: default; }
+.adbar { background: var(--bar); padding-inline: 16px; padding-block: 6px; }
+.ad { width: min(320px, 100%); height: 50px; margin-inline: auto; display: flex; align-items: center; justify-content: center; border: 1px dashed #4C6A2C; border-radius: 6px; color: #8FA878; font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; }
+.ad.live { border-color: transparent; color: transparent; }
+.veil { position: fixed; inset: 0; z-index: 10; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(8, 20, 2, 0.78); }
+.box { background: var(--bar); border: 3px solid var(--gold); border-radius: 14px; padding: 18px; width: 100%; max-width: 340px; display: flex; flex-direction: column; gap: 10px; text-align: center; }
+.box h2 { margin: 0; font-size: 1.5rem; font-weight: 800; color: var(--gold); line-height: 1.1; text-wrap: balance; }
+.box p { margin: 0; color: var(--muted); }
+.box .big { font-size: 2.6rem; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+.go { background: var(--gold); color: var(--gold-ink); border-radius: 10px; min-height: 48px; font-weight: 800; font-size: 1.1rem; }
+.go.alt { background: transparent; color: var(--ink); border: 2px solid #4C6A2C; }
+.go:disabled { opacity: 0.55; cursor: default; }
+.adfake { height: 180px; border: 1px dashed #4C6A2C; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #8FA878; letter-spacing: 0.08em; text-transform: uppercase; font-size: 0.85rem; }
+
+.timebar { width: min(100%, 420px); height: 12px; border-radius: 6px; background: var(--bar); overflow: hidden; }
+.timebar i { display: block; height: 100%; background: var(--gold); width: 100%; transition: width 0.25s linear; }
+.timebar i.low { background: var(--p3); }
+.slots, .tiles { display: flex; gap: 8px; justify-content: center; }
+.slots.no { animation: shake 0.35s; }
+.slots.yes .sl { background: var(--gold); color: var(--gold-ink); }
+.sl, .tile { width: min(56px, calc((100vw - 64px) / 5)); aspect-ratio: 1; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: clamp(1.4rem, 7vw, 2rem); line-height: 1; }
+.sl { border: 2px dashed rgba(255, 255, 255, 0.4); background: rgba(0, 0, 0, 0.15); }
+.sl.on { border: none; background: var(--card); color: var(--black); box-shadow: 0 3px 0 var(--edge); }
+.tile { background: var(--card); color: var(--black); box-shadow: 0 4px 0 var(--edge); }
+.tile:disabled { opacity: 0.2; cursor: default; }
+@keyframes shake { 25% { translate: -6px 0; } 75% { translate: 6px 0; } }
+.big-start { font-size: 1.3rem; padding: 0 28px; }
+@media (prefers-reduced-motion: reduce) { .slots.no { animation: none; } .timebar i { transition: none; } }
+</style>
+
+<div class="bar">
+  <div class="brand">Stack a Dollar <span>Scramble</span></div>
+  <div class="side"><span>Score</span><b id="score">0</b></div>
+  <div class="goal"><b id="time">60</b><span>Seconds</span></div>
+  <div class="side r"><span>Best</span><b id="best">0</b></div>
+</div>
+<div class="stage">
+  <div class="timebar" aria-hidden="true"><i id="tbar"></i></div>
+  <div class="slots" id="slots" aria-label="Your answer"></div>
+  <div class="tiles" id="tiles" aria-label="Letters"></div>
+  <div id="msg" role="status" aria-live="polite">Unscramble as many words as you can in 60 seconds</div>
+  <button class="go big-start" id="start">Start</button>
+</div>
+<div class="rack"><div class="tools" style="--n: 3">
+  <button class="tool" id="clear">Clear</button>
+  <button class="tool" id="skip">Skip<small>-5 seconds</small></button>
+  <button class="tool gold" id="hint">Hint<small>Watch an ad</small></button>
+</div></div>
+<div class="adbar"><div class="ad" id="adBanner">Ad space</div></div>
+<div class="veil" id="adBreak" hidden><div class="box">
+  <p id="adLabel">Ad break</p>
+  <div class="adfake">Ad shows here in the app</div>
+  <button class="go" id="adGo" disabled>Continue</button>
+</div></div>
+<div class="veil" id="over" hidden><div class="box">
+  <h2 id="overT">Time's up!</h2>
+  <p>Words solved</p>
+  <div class="big" id="overN">0</div>
+  <p id="overP"></p>
+  <button class="go" id="more">+15 seconds<br><small>Watch an ad</small></button>
+  <button class="go alt" id="again">Play again</button>
+</div></div>
+
+<script>
+(function () {
+"use strict";
+var $ = function (id) { return document.getElementById(id); }, GAME = "scramble";
+/* ---------- app bridge: the phone app connects these to AdMob and rewards ---------- */
+function post(o) { o.game = GAME; try { if (window.StackBridge && window.StackBridge.postMessage) { window.StackBridge.postMessage(JSON.stringify(o)); return true; } } catch (e) {} return false; }
+function showAd(kind, label, done) {
+  if (post({ type: kind })) { window[kind === "rewarded" ? "stackRewardEarned" : "stackAdClosed"] = function () { done(); }; return; }
+  var v = $("adBreak"), b = $("adGo"), n = kind === "rewarded" ? 5 : 3; $("adLabel").textContent = label || "Ad break";
+  v.hidden = false; b.disabled = true; b.textContent = "Continue in " + n;
+  var iv = setInterval(function () { n--; if (n > 0) b.textContent = "Continue in " + n; else { clearInterval(iv); b.disabled = false; b.textContent = "Continue"; b.focus(); } }, 1000);
+  b.onclick = function () { v.hidden = true; done(); };
+}
+if (post({ type: "banner" })) $("adBanner").classList.add("live");
+function store(k, v) { try { if (v === undefined) return localStorage.getItem("sad-" + GAME + "-" + k); localStorage.setItem("sad-" + GAME + "-" + k, v); } catch (e) { return null; } }
+
+var WORDS = "ABOUT ABOVE ACTOR ACUTE ADULT AFTER AGAIN AGENT AGREE AHEAD ALARM ALBUM ALERT ALIKE ALIVE ALLOW ALONE ALONG ALTER AMONG ANGEL ANGER ANGLE ANGRY APART APPLE APPLY ARENA ARGUE ARISE ARMOR ARRAY ARROW ASIDE ASSET AUDIO AVOID AWARD AWARE AWFUL BACON BADGE BAKER BASIC BASIN BATCH BEACH BEARD BEAST BEGIN BEING BELOW BENCH BERRY BIRTH BLACK BLADE BLAME BLANK BLAST BLAZE BLEND BLESS BLIND BLOCK BLOOD BLOOM BOARD BOAST BONUS BOOST BOOTH BOUND BRAIN BRAND BRASS BRAVE BREAD BREAK BRICK BRIDE BRIEF BRING BROAD BROOK BROWN BRUSH BUILD BUNCH BURST BUYER CABIN CABLE CAMEL CANDY CARGO CARRY CATCH CAUSE CHAIN CHAIR CHALK CHARM CHART CHASE CHEAP CHECK CHEEK CHEER CHESS CHEST CHIEF CHILD CHILL CHOIR CIVIL CLAIM CLASS CLEAN CLEAR CLERK CLICK CLIFF CLIMB CLOCK CLOSE CLOTH CLOUD COACH COAST COLOR COUCH COULD COUNT COURT COVER CRACK CRAFT CRANE CRASH CRAZY CREAM CRIME CRISP CROWD CROWN CRUST CURVE CYCLE DAILY DAIRY DANCE DEALT DEATH DEBUT DELAY DEPTH DIRTY DIZZY DOUGH DRAFT DRAIN DRAMA DREAM DRESS DRIFT DRINK DRIVE EAGER EAGLE EARLY EARTH EIGHT ELBOW ELDER EMPTY ENEMY ENJOY ENTER ENTRY EQUAL ERROR EVENT EVERY EXACT EXIST EXTRA FABLE FAINT FAIRY FAITH FALSE FANCY FEAST FENCE FEVER FIBER FIELD FIFTH FIFTY FIGHT FINAL FIRST FLAME FLASH FLEET FLOCK FLOOR FLOUR FLUID FOCUS FORCE FORTY FOUND FRAME FRESH FRONT FROST FRUIT FUNNY GIANT GIVEN GLASS GLOBE GLORY GLOVE GRACE GRADE GRAIN GRAND GRANT GRAPE GRASS GREAT GREEN GREET GRILL GROSS GROUP GUARD GUESS GUEST GUIDE HABIT HAPPY HARSH HEART HEAVY HELLO HONEY HONOR HORSE HOTEL HOUSE HUMAN HUMOR HURRY IDEAL IMAGE INDEX INNER INPUT ISSUE JELLY JEWEL JOINT JUDGE JUICE KNIFE KNOCK KNOWN LABEL LARGE LASER LATER LAUGH LAYER LEARN LEASE LEAST LEAVE LEGAL LEMON LEVEL LIGHT LIMIT LINEN LIVER LOCAL LODGE LOGIC LOOSE LUCKY LUNCH MAGIC MAJOR MAKER MANGO MAPLE MARCH MATCH MAYBE MAYOR MEDAL METAL METER MIGHT MINOR MODEL MONEY MONTH MORAL MOTOR MOUNT MOUSE MOUTH MOVIE MUSIC NERVE NEVER NIGHT NOBLE NOISE NORTH NOVEL NURSE OCEAN OFFER OFTEN OLIVE ONION OPERA ORBIT ORDER OTHER OUGHT OUNCE OUTER OWNER PAINT PANEL PAPER PARTY PASTA PATCH PEACE PEACH PEARL PENNY PHASE PHONE PHOTO PIANO PIECE PILOT PITCH PIZZA PLACE PLAIN PLANE PLANT PLATE POINT POLAR POUND POWER PRESS PRICE PRIDE PRIME PRINT PRIZE PROOF PROUD PROVE PULSE PUNCH PUPIL QUICK QUIET QUILT QUITE QUOTE RADIO RAISE RANCH RANGE RAPID RATIO REACH READY REALM RELAX REPLY RHYME RIDER RIDGE RIFLE RIGHT RIGID RIVER ROAST ROBOT ROCKY ROUND ROUTE ROYAL RUGBY RULER RURAL SALAD SAUCE SCALE SCENE SCENT SCOPE SCORE SCOUT SENSE SERVE SEVEN SHADE SHAKE SHAPE SHARE SHARK SHARP SHEEP SHEET SHELF SHELL SHIFT SHINE SHIRT SHOCK SHOOT SHORE SHORT SHOUT SIGHT SKILL SKIRT SLICE SLIDE SLOPE SMALL SMART SMILE SMOKE SNACK SNAKE SOLAR SOLID SOLVE SOUND SOUTH SPACE SPARE SPARK SPEAK SPEED SPEND SPICE SPINE SPOON SPORT SPRAY SQUAD STACK STAFF STAGE STAIR STAKE STAMP STAND START STATE STEAK STEAM STEEL STICK STILL STOCK STONE STOOL STORM STORY STOVE STRAP STRAW STRIP STUDY STUFF STYLE SUGAR SUITE SUNNY SUPER SWEET SWIFT SWING TABLE TASTE TEACH TEETH THANK THEME THICK THING THINK THIRD THREE THROW THUMB TIGER TIGHT TIMER TITLE TOAST TODAY TOKEN TOOTH TOPIC TORCH TOTAL TOUCH TOUGH TOWER TOXIC TRACK TRADE TRAIL TRAIN TREAT TREND TRIAL TRIBE TRICK TRUCK TRULY TRUST TRUTH TWICE UNCLE UNDER UNION UNITY UPPER UPSET URBAN USUAL VALID VALUE VIDEO VITAL VIVID VOCAL VOICE WAGON WASTE WATCH WATER WHALE WHEAT WHEEL WHERE WHILE WHITE WHOLE WOMAN WORLD WORRY WORTH WOULD WOUND WRITE WRONG YACHT YIELD YOUNG YOUTH ZEBRA".split(" "), SET = {}; WORDS.forEach(function (w) { SET[w] = 1; });
+var word, letters, picked, score, solved, timeLeft, timer = null, running = false, best = +store("best") || 0, usedMore = false, hintN = 0, games = 0;
+function shuffle(a) { for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), x = a[i]; a[i] = a[j]; a[j] = x; } return a; }
+function nextWord() {
+  word = WORDS[Math.floor(Math.random() * WORDS.length)];
+  do { letters = shuffle(word.split("")); } while (letters.join("") === word);
+  picked = []; hintN = 0; render();
+}
+function begin() {
+  score = 0; solved = 0; timeLeft = 60; usedMore = false; running = true;
+  $("start").hidden = true; $("over").hidden = true; say("Tap the letters in order"); nextWord(); tickOn();
+}
+function tickOn() { clearInterval(timer); timer = setInterval(function () { if (!running) return; timeLeft -= 0.25; if (timeLeft <= 0) { timeLeft = 0; endRound(); } hud(); }, 250); hud(); }
+function pick(i) {
+  if (!running || picked.indexOf(i) >= 0) return;
+  picked.push(i); render();
+  if (picked.length === 5) {
+    var g = picked.map(function (k) { return letters[k]; }).join("");
+    var sl = $("slots");
+    if (SET[g]) {
+      score += 10 + Math.max(0, Math.round(timeLeft / 6)) - hintN * 3; solved++; timeLeft = Math.min(99, timeLeft + 3);
+      sl.classList.add("yes"); say(g + (g === word ? "!" : "! (also counts)") + " +3 seconds"); running = false;
+      setTimeout(function () { sl.classList.remove("yes"); running = true; nextWord(); }, 450);
+    } else { sl.classList.remove("no"); void sl.offsetWidth; sl.classList.add("no"); say("Not quite. Try again."); setTimeout(function () { picked = picked.slice(0, hintN); render(); }, 350); }
+    hud();
+  }
+}
+function endRound() {
+  running = false; clearInterval(timer);
+  if (score > best) { best = score; store("best", best); }
+  post({ type: "gameOver", score: score, solved: solved });
+  $("overN").textContent = solved; $("overP").textContent = "Score " + score + ". Best " + best + ". The last word was " + word + ".";
+  $("more").hidden = usedMore; $("over").hidden = false; ($("more").hidden ? $("again") : $("more")).focus(); hud();
+}
+
+function say(s) { $("msg").textContent = s; }
+function hud() {
+  $("score").textContent = score || 0; $("best").textContent = best; $("time").textContent = Math.ceil(timeLeft || 0);
+  var t = $("tbar"); t.style.width = Math.min(100, (timeLeft || 0) / 60 * 100) + "%"; t.classList.toggle("low", timeLeft < 10);
+}
+function render() {
+  var s = $("slots"); s.textContent = "";
+  for (var i = 0; i < 5; i++) { var d = document.createElement("div"), k = picked[i]; d.className = "sl" + (k !== undefined ? " on" : ""); d.textContent = k !== undefined ? letters[k] : ""; s.appendChild(d); }
+  s.setAttribute("aria-label", "Your answer: " + (picked.map(function (k) { return letters[k]; }).join("") || "empty"));
+  var t = $("tiles"); t.textContent = "";
+  letters.forEach(function (ch, i) { var b = document.createElement("button"); b.className = "tile"; b.textContent = ch; b.disabled = picked.indexOf(i) >= 0; b.setAttribute("aria-label", "Letter " + ch); b.addEventListener("click", function () { pick(i); }); t.appendChild(b); });
+  hud();
+}
+
+$("start").addEventListener("click", begin);
+$("clear").addEventListener("click", function () { if (!running) return; picked = picked.slice(0, hintN); render(); });
+$("skip").addEventListener("click", function () { if (!running) return; timeLeft = Math.max(0, timeLeft - 5); say("Skipped. It was " + word + "."); nextWord(); });
+$("hint").addEventListener("click", function () {
+  if (!running || hintN >= 4) return;
+  running = false;
+  showAd("rewarded", "Watch to place the next letter", function () {
+    var need = word[hintN], k = letters.findIndex(function (ch, i) { return ch === need && picked.slice(0, hintN).indexOf(i) < 0; });
+    picked = picked.slice(0, hintN); picked.push(k); hintN++; running = true; render(); say("Letter " + hintN + " placed");
+  });
+});
+$("more").addEventListener("click", function () { $("over").hidden = true; showAd("rewarded", "Watch for 15 more seconds", function () { usedMore = true; timeLeft = 15; running = true; tickOn(); say("15 more seconds!"); }); });
+$("again").addEventListener("click", function () { $("over").hidden = true; games++; if (games % 2 === 0) showAd("interstitial", "", begin); else begin(); });
+word = "STACK"; letters = ["K", "C", "A", "T", "S"]; picked = []; score = 0; timeLeft = 60; render();
+})();
+</script>
+
+</body>
+</html>

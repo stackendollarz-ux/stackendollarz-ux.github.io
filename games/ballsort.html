@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{box-sizing:border-box}body{margin:0}img{max-width:100%}[hidden]{display:none!important}.adbar{display:none!important}</style>
+<script>
+/* Website preview: no ads here, so ad breaks and "watch an ad" buttons continue right away. */
+window.StackBridge = { postMessage: function (raw) {
+  var m = {}; try { m = JSON.parse(raw); } catch (e) {}
+  setTimeout(function () {
+    if (m.type === "interstitial" && window.stackAdClosed) window.stackAdClosed();
+    if (m.type === "rewarded" && window.stackRewardEarned) window.stackRewardEarned();
+  }, 0);
+} };
+</script>
+</head>
+<body>
+<title>Stack a Dollar Ball Sort</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&display=swap">
+<style>
+/* Layout: one screen. Level bar, glass tubes of colored balls standing on the felt in wrapping rows, a wooden shelf of tools (undo, restart, extra tube), ad banner space at the bottom. Same family look as the other Stack a Dollar games; one dark look by choice. */
+:root {
+  color-scheme: dark;
+  --felt: #5E9E1B; --felt-deep: #3F7A12; --bar: #17240C; --ink: #FFFFFF; --muted: #D8E8C4;
+  --wood: #9A5A2E; --wood-deep: #6E3D1D; --gold: #F4B321; --gold-ink: #2A1B00; --glass: rgba(255, 255, 255, 0.16); --rim: rgba(255, 255, 255, 0.7);
+  --font: 'Baloo 2', 'Trebuchet MS', 'Segoe UI', Arial, sans-serif;
+  --seg: clamp(26px, 7.5vw, 38px); --tw: clamp(38px, 11vw, 50px);
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { background: var(--felt-deep); color: var(--ink); font-family: var(--font); font-size: 1rem; font-weight: 600; display: flex; flex-direction: column; overflow: hidden; -webkit-user-select: none; user-select: none; }
+button { font: inherit; color: inherit; cursor: pointer; border: none; background: none; padding: 0; }
+button:focus-visible { outline: 3px solid #FFFFFF; outline-offset: 2px; }
+
+.bar { padding-inline: 16px; padding-block: 8px; background: var(--bar); display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 2px 10px; }
+.brand { flex: 0 0 100%; text-align: center; font-weight: 800; font-size: 1.15rem; line-height: 1.1; color: var(--gold); }
+.brand span { color: var(--ink); }
+.side { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; line-height: 1.1; }
+.side.r { align-items: flex-end; }
+.side span { color: var(--muted); font-size: 0.85rem; }
+.side b { font-size: 1.7rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.goal { background: var(--gold); color: var(--gold-ink); border-radius: 10px; padding: 2px 16px; text-align: center; line-height: 1.05; }
+.goal b { display: block; font-size: 1.5rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.goal span { font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; }
+
+.stage { position: relative; flex: 1 1 0; min-height: 0; overflow-y: auto; padding-inline: 16px; padding-block: 18px 10px; background: radial-gradient(ellipse at 50% 40%, var(--felt) 0%, var(--felt-deep) 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; }
+#tubes { display: flex; flex-wrap: wrap; justify-content: center; gap: 28px 12px; max-width: 460px; padding-top: 16px; }
+.tube { width: var(--tw); height: calc(var(--seg) * 4 + 16px); padding: 6px 4px; border: 3px solid var(--rim); border-top-width: 0; border-radius: 0 0 calc(var(--tw) / 2) calc(var(--tw) / 2); background: var(--glass); display: flex; flex-direction: column-reverse; gap: 2px; overflow: hidden; position: relative; transition: transform 0.15s; }
+.tube::before { content: ""; position: absolute; left: -6px; right: -6px; top: 0; height: 5px; border-radius: 3px; background: var(--rim); }
+.tube.sel { transform: translateY(-16px); }
+.tube.done { border-color: var(--gold); }
+.tube.done::before { background: var(--gold); }
+.tube.no { animation: shake 0.3s; }
+@keyframes shake { 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+.seg { height: var(--seg); flex: none; border-radius: 4px; background: var(--c); box-shadow: inset 0 -5px 0 rgba(0, 0, 0, 0.18), inset 4px 0 0 rgba(255, 255, 255, 0.22); }
+.tube .seg:first-child { border-radius: 4px 4px calc(var(--tw) / 2 - 6px) calc(var(--tw) / 2 - 6px); }
+.seg.pop { animation: fill 0.25s ease-out; }
+@keyframes fill { from { opacity: 0; transform: translateY(-10px); } }
+#msg { min-height: 1.4em; text-align: center; font-size: 1rem; font-weight: 800; color: var(--gold); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7); }
+
+.rack { padding-inline: 16px; padding-block: 10px 12px; background: var(--wood); border-top: 6px solid var(--wood-deep); box-shadow: inset 0 10px 14px rgba(0, 0, 0, 0.25); }
+.tools { max-width: 440px; margin-inline: auto; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.tool { min-height: 48px; border-radius: 10px; background: var(--bar); font-weight: 800; line-height: 1.1; padding: 4px; }
+.tool small { display: block; font-size: 0.75rem; color: var(--muted); font-weight: 600; }
+.tool.gold { background: var(--gold); color: var(--gold-ink); }
+.tool.gold small { color: var(--gold-ink); }
+.tool:disabled { opacity: 0.45; cursor: default; }
+
+.adbar { background: var(--bar); padding-inline: 16px; padding-block: 6px; }
+.ad { width: min(320px, 100%); height: 50px; margin-inline: auto; display: flex; align-items: center; justify-content: center; border: 1px dashed #4C6A2C; border-radius: 6px; color: #8FA878; font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; }
+.ad.live { border-color: transparent; color: transparent; }
+
+.veil { position: fixed; inset: 0; z-index: 10; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(8, 20, 2, 0.78); }
+.box { background: var(--bar); border: 3px solid var(--gold); border-radius: 14px; padding: 18px; width: 100%; max-width: 340px; display: flex; flex-direction: column; gap: 10px; text-align: center; }
+.box h2 { margin: 0; font-size: 1.5rem; font-weight: 800; color: var(--gold); line-height: 1.1; text-wrap: balance; }
+.box p { margin: 0; color: var(--muted); }
+.go { background: var(--gold); color: var(--gold-ink); border-radius: 10px; min-height: 48px; font-weight: 800; font-size: 1.1rem; }
+.go:disabled { opacity: 0.55; cursor: default; }
+.adfake { height: 180px; border: 1px dashed #4C6A2C; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #8FA878; letter-spacing: 0.08em; text-transform: uppercase; font-size: 0.85rem; }
+.seg { width: calc(var(--tw) - 16px); height: calc(var(--tw) - 16px); align-self: center; border-radius: 50% !important; box-shadow: inset -4px -5px 0 rgba(0, 0, 0, 0.2), inset 4px 4px 0 rgba(255, 255, 255, 0.3); }
+.tube { height: calc((var(--tw) - 14px) * 4 + 20px); gap: 3px; }
+@media (prefers-reduced-motion: reduce) { .tube, .seg.pop, .tube.no { transition: none; animation: none; } }
+</style>
+
+<div class="bar">
+  <div class="brand">Stack a Dollar <span>Ball Sort</span></div>
+  <div class="side"><span>Moves</span><b id="moves">0</b></div>
+  <div class="goal"><b id="level">1</b><span>Level</span></div>
+  <div class="side r"><span>Colors</span><b id="colors">3</b></div>
+</div>
+<div class="stage">
+  <div id="tubes" aria-label="Tubes"></div>
+  <div id="msg" role="status" aria-live="polite">Tap a tube, then tap where to move its top ball</div>
+</div>
+<div class="rack"><div class="tools">
+  <button class="tool" id="undo">Undo</button>
+  <button class="tool" id="restart">Restart</button>
+  <button class="tool gold" id="extra">+ Tube<small>Watch an ad</small></button>
+</div></div>
+<div class="adbar"><div class="ad" id="adBanner">Ad space</div></div>
+
+<div class="veil" id="won" hidden><div class="box">
+  <h2 id="wonT">Level 1 done!</h2>
+  <p id="wonP"></p>
+  <button class="go" id="next">Next level</button>
+</div></div>
+<div class="veil" id="adBreak" hidden><div class="box">
+  <p id="adLabel">Ad break</p>
+  <div class="adfake">Ad shows here in the app</div>
+  <button class="go" id="adGo" disabled>Continue</button>
+</div></div>
+
+<script>
+(function () {
+"use strict";
+var $ = function (id) { return document.getElementById(id); };
+var CAP = 4;
+var PALETTE = ["#F4B321", "#39B8F2", "#F2456B", "#FFFFFF", "#A77BF5", "#1F5FD1", "#F28C28", "#2EC4A0", "#8B2E1A", "#C9F23A", "#F59BD0", "#6B6B6B"];
+var level = 1, tubes, start, hist, moves, sel = -1, extraUsed = false, last = -1;
+try { level = Math.max(1, +localStorage.getItem("sad-ballsort-level") || 1); } catch (e) {}
+
+/* ---------- app bridge: the phone app connects these to AdMob and rewards ---------- */
+function post(o) { try { if (window.StackBridge && window.StackBridge.postMessage) { window.StackBridge.postMessage(JSON.stringify(o)); return true; } } catch (e) {} return false; }
+function showAd(kind, done) {
+  if (post({ type: kind, game: "ballsort" })) { window[kind === "rewarded" ? "stackRewardEarned" : "stackAdClosed"] = function () { done(); }; return; }
+  var v = $("adBreak"), b = $("adGo"), n = kind === "rewarded" ? 5 : 3; $("adLabel").textContent = kind === "rewarded" ? "Watch to get an extra tube" : "Ad break";
+  v.hidden = false; b.disabled = true; b.textContent = "Continue in " + n;
+  var iv = setInterval(function () { n--; if (n > 0) b.textContent = "Continue in " + n; else { clearInterval(iv); b.disabled = false; b.textContent = "Continue"; b.focus(); } }, 1000);
+  b.onclick = function () { v.hidden = true; done(); };
+}
+if (post({ type: "banner", game: "ballsort" })) $("adBanner").classList.add("live");
+
+/* ---------- rules ---------- */
+function colorCount(lv) { return Math.min(PALETTE.length, 3 + Math.floor((lv - 1) / 2)); }
+function makeLevel() {
+  var n = colorCount(level), segs, t;
+  do {
+    segs = []; for (var c = 0; c < n; c++) for (var k = 0; k < CAP; k++) segs.push(c);
+    for (var i = segs.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), x = segs[i]; segs[i] = segs[j]; segs[j] = x; }
+    t = []; for (c = 0; c < n; c++) t.push(segs.slice(c * CAP, c * CAP + CAP));
+  } while (t.some(full));
+  t.push([], []);
+  start = JSON.stringify(t); tubes = t; hist = []; moves = 0; sel = -1; extraUsed = false; last = -1;
+  $("won").hidden = true; say("Tap a tube, then tap where to move its top ball"); render();
+}
+function full(t) { return t.length === CAP && t.every(function (x) { return x === t[0]; }); }
+function topRun(t) { var n = 0, c = t[t.length - 1]; for (var i = t.length - 1; i >= 0 && t[i] === c; i--) n++; return n; }
+function canPour(a, b) { var A = tubes[a], B = tubes[b]; return a !== b && A.length && B.length < CAP && !full(A) && (!B.length || B[B.length - 1] === A[A.length - 1]); }
+function pour(a, b) {
+  hist.push(JSON.stringify(tubes));
+  var A = tubes[a], B = tubes[b], n = 1;
+  for (var i = 0; i < n; i++) B.push(A.pop());
+  moves++; last = b;
+}
+function solved() { return tubes.every(function (t) { return !t.length || full(t); }); }
+function stuck() { for (var a = 0; a < tubes.length; a++) for (var b = 0; b < tubes.length; b++) if (canPour(a, b)) return false; return true; }
+
+function tap(i) {
+  if (sel < 0) {
+    if (!tubes[i].length || full(tubes[i])) return shake(i);
+    sel = i; render(); return;
+  }
+  if (sel === i) { sel = -1; render(); return; }
+  if (!canPour(sel, i)) { var was = sel; sel = -1; render(); say("Move onto the same color or an empty tube"); return shake(i, was); }
+  pour(sel, i); sel = -1; render();
+  if (solved()) return win();
+  say(stuck() ? "No moves left. Undo, restart, or add a tube." : "");
+}
+function win() {
+  post({ type: "levelComplete", game: "ballsort", level: level, moves: moves });
+  $("wonT").textContent = "Level " + level + " done!";
+  $("wonP").textContent = "Sorted in " + moves + " moves.";
+  level++; try { localStorage.setItem("sad-ballsort-level", level); } catch (e) {}
+  setTimeout(function () { $("won").hidden = false; $("next").focus(); }, 450);
+}
+
+/* ---------- drawing ---------- */
+function say(s) { $("msg").textContent = s; }
+function shake(i) { var el = $("tubes").children[i]; if (!el) return; el.classList.remove("no"); void el.offsetWidth; el.classList.add("no"); }
+function render() {
+  $("moves").textContent = moves; $("level").textContent = level; $("colors").textContent = colorCount(level);
+  var box = $("tubes"); box.textContent = "";
+  tubes.forEach(function (t, i) {
+    var b = document.createElement("button"); b.className = "tube" + (sel === i ? " sel" : "") + (full(t) ? " done" : "");
+    b.setAttribute("aria-label", "Tube " + (i + 1) + ", " + (t.length ? t.length + " of " + CAP + " full" : "empty") + (full(t) ? ", sorted" : "") + (sel === i ? ", selected" : ""));
+    t.forEach(function (c, k) {
+      var s = document.createElement("span"); s.className = "seg" + (i === last && k >= t.length - topRun(t) ? " pop" : ""); s.style.setProperty("--c", PALETTE[c]); b.appendChild(s);
+    });
+    b.addEventListener("click", function () { tap(i); });
+    box.appendChild(b);
+  });
+  last = -1;
+  $("undo").disabled = !hist.length; $("extra").disabled = extraUsed;
+}
+
+$("undo").addEventListener("click", function () { if (!hist.length) return; tubes = JSON.parse(hist.pop()); moves++; sel = -1; say(""); render(); });
+$("restart").addEventListener("click", function () { tubes = JSON.parse(start); if (extraUsed) tubes.push([]); hist = []; moves = 0; sel = -1; say(""); render(); });
+$("extra").addEventListener("click", function () {
+  if (extraUsed) return;
+  showAd("rewarded", function () { extraUsed = true; tubes.push([]); say("Extra tube added"); render(); });
+});
+$("next").addEventListener("click", function () {
+  $("won").hidden = true;
+  if ((level - 1) % 2 === 0) showAd("interstitial", makeLevel); else makeLevel();
+});
+makeLevel();
+})();
+</script>
+
+</body>
+</html>

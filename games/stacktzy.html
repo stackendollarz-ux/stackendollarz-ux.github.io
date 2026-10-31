@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{box-sizing:border-box}body{margin:0}img{max-width:100%}[hidden]{display:none!important}.adbar{display:none!important}</style>
+<script>
+/* Website preview: no ads here, so ad breaks and "watch an ad" buttons continue right away. */
+window.StackBridge = { postMessage: function (raw) {
+  var m = {}; try { m = JSON.parse(raw); } catch (e) {}
+  setTimeout(function () {
+    if (m.type === "interstitial" && window.stackAdClosed) window.stackAdClosed();
+    if (m.type === "rewarded" && window.stackRewardEarned) window.stackRewardEarned();
+  }, 0);
+} };
+</script>
+</head>
+<body>
+<title>Stacktzy</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&display=swap">
+<style>
+/* Layout: one screen. Score bar, five dice in a wooden tray with the roll button, then a two-column scorecard (top section, bottom section), ad banner space at the bottom. Same family look as the other Stack a Dollar games; one dark look by choice. */
+:root {
+  color-scheme: dark;
+  --felt: #5E9E1B; --felt-deep: #3F7A12; --bar: #17240C; --row: #213511; --ink: #FFFFFF; --muted: #D8E8C4; --dim: #9DB585;
+  --wood: #9A5A2E; --wood-deep: #6E3D1D; --gold: #F4B321; --gold-ink: #2A1B00;
+  --die: #FBF8EE; --die-edge: #B9AE93; --pip: #18140F;
+  --font: 'Baloo 2', 'Trebuchet MS', 'Segoe UI', Arial, sans-serif;
+  --d: min(58px, calc((100vw - 32px - 40px) / 5));
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { background: var(--felt-deep); color: var(--ink); font-family: var(--font); font-size: 1rem; font-weight: 600; display: flex; flex-direction: column; overflow: hidden; -webkit-user-select: none; user-select: none; }
+button { font: inherit; color: inherit; cursor: pointer; border: none; background: none; padding: 0; }
+button:focus-visible { outline: 3px solid #FFFFFF; outline-offset: 2px; }
+
+.bar { padding-inline: 16px; padding-block: 8px; background: var(--bar); display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 2px 10px; }
+.brand { flex: 0 0 100%; text-align: center; font-weight: 800; font-size: 1.15rem; line-height: 1.1; color: var(--gold); }
+.brand span { color: var(--ink); }
+.side { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; line-height: 1.1; }
+.side.r { align-items: flex-end; }
+.side span { color: var(--muted); font-size: 0.85rem; }
+.side b { font-size: 1.7rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.goal { background: var(--gold); color: var(--gold-ink); border-radius: 10px; padding: 2px 16px; text-align: center; line-height: 1.05; }
+.goal b { display: block; font-size: 1.5rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.goal span { font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; }
+.new { border: 2px solid #4C6A2C; border-radius: 8px; min-height: 40px; padding: 0 10px; font-size: 0.9rem; }
+
+.rack { padding-inline: 16px; padding-block: 12px; background: var(--wood); border-bottom: 6px solid var(--wood-deep); box-shadow: inset 0 -10px 14px rgba(0, 0, 0, 0.25); display: flex; flex-direction: column; align-items: center; gap: 10px; }
+#dice { display: flex; gap: 10px; justify-content: center; }
+.die { width: var(--d); height: var(--d); border-radius: 18%; background: var(--die); box-shadow: 0 4px 0 var(--die-edge), 0 6px 8px rgba(0, 0, 0, 0.35); display: block; transition: transform 0.12s; position: relative; flex: none; }
+.die i { position: absolute; width: 20%; height: 20%; border-radius: 50%; background: var(--pip); transform: translate(-50%, -50%); }
+.die i.coin { width: 50%; height: 50%; background: var(--gold); color: var(--gold-ink); box-shadow: inset 0 -3px 0 #A87700; display: flex; align-items: center; justify-content: center; font-style: normal; font-weight: 800; font-size: calc(var(--d) * 0.34); line-height: 1; }
+.die .mark { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: calc(var(--d) * 0.5); line-height: 1; color: var(--die-edge); }
+.die.held { box-shadow: 0 0 0 4px var(--gold), 0 4px 0 var(--die-edge); transform: translateY(-5px); }
+.die.held::after { content: "HOLD"; position: absolute; left: 0; right: 0; bottom: -24px; text-align: center; font-size: 0.7rem; font-weight: 800; letter-spacing: 0.08em; color: var(--gold); }
+.die.roll { animation: roll 0.4s ease-out; }
+@keyframes roll { 0% { transform: rotate(-25deg) scale(0.85); } 60% { transform: rotate(12deg); } }
+.rollrow { display: flex; gap: 8px; width: 100%; max-width: 420px; margin-top: 10px; }
+.roll { flex: 1 1 0; background: var(--gold); color: var(--gold-ink); border-radius: 10px; min-height: 50px; font-weight: 800; font-size: 1.15rem; line-height: 1.05; }
+.roll small { display: block; font-size: 0.75rem; font-weight: 600; }
+.roll:disabled { opacity: 0.5; cursor: default; }
+.extra { flex: 0 0 auto; background: var(--bar); border-radius: 10px; min-height: 50px; padding: 0 12px; font-weight: 800; line-height: 1.05; }
+.extra small { display: block; font-size: 0.72rem; font-weight: 600; color: var(--muted); }
+
+.stage { flex: 1 1 0; min-height: 0; overflow-y: auto; padding-inline: 16px; padding-block: 10px; background: radial-gradient(ellipse at 50% 30%, var(--felt) 0%, var(--felt-deep) 100%); }
+#msg { max-width: 460px; margin: 0 auto 8px; min-height: 1.4em; text-align: center; font-weight: 800; color: var(--gold); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7); }
+.card { max-width: 460px; margin-inline: auto; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.col { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.col h3 { margin: 0; font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.cat { display: flex; align-items: center; justify-content: space-between; gap: 6px; min-height: 40px; padding: 2px 10px; border-radius: 8px; background: var(--row); text-align: left; line-height: 1.1; }
+.cat span { font-size: 0.92rem; min-width: 0; }
+.cat b { font-size: 1.15rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.cat.open b { color: var(--dim); }
+.cat.open.good { background: #2F4D16; box-shadow: inset 0 0 0 2px var(--gold); }
+.cat.open.good b { color: var(--gold); }
+.cat.used { background: var(--bar); cursor: default; }
+.cat.sum { background: transparent; min-height: 30px; cursor: default; }
+.cat.sum span { color: var(--muted); font-size: 0.82rem; }
+
+.adbar { background: var(--bar); padding-inline: 16px; padding-block: 6px; }
+.ad { width: min(320px, 100%); height: 50px; margin-inline: auto; display: flex; align-items: center; justify-content: center; border: 1px dashed #4C6A2C; border-radius: 6px; color: #8FA878; font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; }
+.ad.live { border-color: transparent; color: transparent; }
+
+.veil { position: fixed; inset: 0; z-index: 10; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(8, 20, 2, 0.78); }
+.box { background: var(--bar); border: 3px solid var(--gold); border-radius: 14px; padding: 18px; width: 100%; max-width: 340px; display: flex; flex-direction: column; gap: 10px; text-align: center; }
+.box h2 { margin: 0; font-size: 1.5rem; font-weight: 800; color: var(--gold); line-height: 1.1; text-wrap: balance; }
+.box p { margin: 0; color: var(--muted); }
+.box .big { font-size: 2.6rem; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+.go { background: var(--gold); color: var(--gold-ink); border-radius: 10px; min-height: 48px; font-weight: 800; font-size: 1.1rem; }
+.go:disabled { opacity: 0.55; cursor: default; }
+.adfake { height: 180px; border: 1px dashed #4C6A2C; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #8FA878; letter-spacing: 0.08em; text-transform: uppercase; font-size: 0.85rem; }
+@media (prefers-reduced-motion: reduce) { .die, .die.roll { transition: none; animation: none; } }
+</style>
+
+<div class="bar">
+  <div class="brand">Stack a Dollar <span>Stacktzy</span></div>
+  <div class="side"><span>Score</span><b id="score">0</b></div>
+  <div class="goal"><b id="round">1/13</b><span>Round</span></div>
+  <div class="side r"><span>Best</span><b id="best">0</b></div>
+  <button class="new" id="newGame">New game</button>
+</div>
+<div class="rack">
+  <div id="dice" aria-label="Dice. Tap a die to hold it."></div>
+  <div class="rollrow">
+    <button class="roll" id="roll">Roll<small id="rollsLeft">3 rolls left</small></button>
+    <button class="extra" id="extra" hidden>+1 Roll<small>Watch an ad</small></button>
+  </div>
+</div>
+<div class="stage">
+  <div id="msg" role="status" aria-live="polite">Roll the dice to start</div>
+  <div class="card">
+    <div class="col" id="upper"><h3>Top</h3></div>
+    <div class="col" id="lower"><h3>Bottom</h3></div>
+  </div>
+</div>
+<div class="adbar"><div class="ad" id="adBanner">Ad space</div></div>
+
+<div class="veil" id="over" hidden><div class="box">
+  <h2 id="overT">Game over</h2>
+  <p>Final score</p>
+  <div class="big" id="overScore">0</div>
+  <p id="overNote"></p>
+  <button class="go" id="again">Play again</button>
+</div></div>
+<div class="veil" id="adBreak" hidden><div class="box">
+  <p id="adLabel">Ad break</p>
+  <div class="adfake">Ad shows here in the app</div>
+  <button class="go" id="adGo" disabled>Continue</button>
+</div></div>
+
+<script>
+(function () {
+"use strict";
+var $ = function (id) { return document.getElementById(id); };
+var PIPS = { 1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] };
+var UPPER = [["ones", "Ones", 1], ["twos", "Twos", 2], ["threes", "Threes", 3], ["fours", "Fours", 4], ["fives", "Fives", 5], ["sixes", "Sixes", 6]];
+var LOWER = [["k3", "3 of a kind"], ["k4", "4 of a kind"], ["fh", "Full house"], ["ss", "Small straight"], ["ls", "Large straight"], ["sz", "Stacktzy"], ["ch", "Chance"]];
+var dice, held, rolls, round, card, bonusSz, extraUsed, best = 0, rolling = false;
+try { best = +localStorage.getItem("sad-stacktzy-best") || 0; } catch (e) {}
+
+/* ---------- app bridge: the phone app connects these to AdMob and rewards ---------- */
+function post(o) { try { if (window.StackBridge && window.StackBridge.postMessage) { window.StackBridge.postMessage(JSON.stringify(o)); return true; } } catch (e) {} return false; }
+function showAd(kind, done) {
+  if (post({ type: kind, game: "stacktzy" })) { window[kind === "rewarded" ? "stackRewardEarned" : "stackAdClosed"] = function () { done(); }; return; }
+  var v = $("adBreak"), b = $("adGo"), n = kind === "rewarded" ? 5 : 3; $("adLabel").textContent = kind === "rewarded" ? "Watch to get an extra roll" : "Ad break";
+  v.hidden = false; b.disabled = true; b.textContent = "Continue in " + n;
+  var iv = setInterval(function () { n--; if (n > 0) b.textContent = "Continue in " + n; else { clearInterval(iv); b.disabled = false; b.textContent = "Continue"; b.focus(); } }, 1000);
+  b.onclick = function () { v.hidden = true; done(); };
+}
+if (post({ type: "banner", game: "stacktzy" })) $("adBanner").classList.add("live");
+
+/* ---------- scoring ---------- */
+function counts() { var c = [0, 0, 0, 0, 0, 0, 0]; dice.forEach(function (d) { c[d]++; }); return c; }
+function sum() { return dice.reduce(function (a, b) { return a + b; }, 0); }
+function hasRun(n) { var c = counts(), run = 0; for (var f = 1; f <= 6; f++) { run = c[f] ? run + 1 : 0; if (run >= n) return true; } return false; }
+function isSz() { return counts().some(function (x) { return x === 5; }); }
+function joker() { return isSz() && card.sz !== null; }
+function value(k) {
+  var c = counts(), mx = Math.max.apply(null, c);
+  for (var i = 0; i < UPPER.length; i++) if (UPPER[i][0] === k) return c[UPPER[i][2]] * UPPER[i][2];
+  switch (k) {
+    case "k3": return mx >= 3 ? sum() : 0;
+    case "k4": return mx >= 4 ? sum() : 0;
+    case "fh": return joker() || (c.indexOf(3) >= 0 && c.indexOf(2) >= 0) ? 25 : 0;
+    case "ss": return joker() || hasRun(4) ? 30 : 0;
+    case "ls": return joker() || hasRun(5) ? 40 : 0;
+    case "sz": return isSz() ? 50 : 0;
+    case "ch": return sum();
+  }
+  return 0;
+}
+function upperSum() { return UPPER.reduce(function (a, u) { return a + (card[u[0]] || 0); }, 0); }
+function upperBonus() { return upperSum() >= 63 ? 35 : 0; }
+function total() { var t = upperSum() + upperBonus() + bonusSz; LOWER.forEach(function (l) { t += card[l[0]] || 0; }); return t; }
+
+/* ---------- play ---------- */
+function newGame() {
+  dice = [0, 0, 0, 0, 0]; held = [false, false, false, false, false]; rolls = 3; round = 1; card = {}; bonusSz = 0; extraUsed = false;
+  UPPER.concat(LOWER).forEach(function (x) { card[x[0]] = null; });
+  $("over").hidden = true; say("Roll the dice to start"); render();
+}
+function roll() {
+  if (rolls <= 0 || rolling) return;
+  rolls--; rolling = true;
+  var moving = [];
+  dice.forEach(function (d, i) { if (!held[i] || !d) { dice[i] = 1 + Math.floor(Math.random() * 6); moving.push(i); } });
+  render(moving);
+  setTimeout(function () { rolling = false; }, 350);
+  if (isSz()) say(card.sz === 50 ? "Another Stacktzy! +100 when you score it" : "STACKTZY!");
+  else say(rolls ? "Tap dice to hold them, then roll again or pick a score" : "Pick a box to score");
+}
+function choose(k) {
+  if (card[k] !== null || rolls === 3 || rolling) return;
+  if (isSz() && card.sz === 50) bonusSz += 100;
+  card[k] = value(k);
+  round++; rolls = 3; held = [false, false, false, false, false]; dice = [0, 0, 0, 0, 0];
+  if (round > 13) return finish();
+  say("Round " + round + ". Roll the dice."); render();
+}
+function finish() {
+  var t = total(); render();
+  if (t > best) { best = t; try { localStorage.setItem("sad-stacktzy-best", best); } catch (e) {} }
+  post({ type: "gameOver", game: "stacktzy", score: t });
+  $("overScore").textContent = t;
+  $("overNote").textContent = (upperBonus() ? "Top bonus +35. " : "") + (bonusSz ? "Stacktzy bonus +" + bonusSz + ". " : "") + "Best: " + best + ".";
+  $("overT").textContent = t >= best ? "New best!" : "Game over";
+  $("best").textContent = best;
+  setTimeout(function () { $("over").hidden = false; $("again").focus(); }, 300);
+}
+
+/* ---------- drawing ---------- */
+function say(s) { $("msg").textContent = s; }
+function render(moving) {
+  moving = moving || [];
+  var box = $("dice"); box.textContent = "";
+  dice.forEach(function (d, i) {
+    var b = document.createElement("button"); b.className = "die" + (d ? "" : " blank") + (held[i] ? " held" : "") + (moving.indexOf(i) >= 0 ? " roll" : "");
+    if (!d) { var mk = document.createElement("span"); mk.className = "mark"; mk.textContent = "$"; b.appendChild(mk); }
+    else if (d === 1) { var coin = document.createElement("i"); coin.className = "coin"; coin.textContent = "$"; coin.style.left = "50%"; coin.style.top = "50%"; b.appendChild(coin); }
+    else PIPS[d].forEach(function (p) { var dot = document.createElement("i"); dot.style.left = (25 + (p % 3) * 25) + "%"; dot.style.top = (25 + Math.floor(p / 3) * 25) + "%"; b.appendChild(dot); });
+    b.setAttribute("aria-label", d ? "Die showing " + d + (held[i] ? ", held" : "") : "Die, not rolled");
+    b.disabled = !d || rolls === 0;
+    b.addEventListener("click", function () { if (!dice[i] || rolls === 0) return; held[i] = !held[i]; render(); });
+    box.appendChild(b);
+  });
+  $("roll").disabled = rolls === 0 || held.every(Boolean);
+  $("rollsLeft").textContent = rolls === 3 ? "3 rolls left" : rolls + (rolls === 1 ? " roll left" : " rolls left");
+  $("extra").hidden = !(rolls === 0 && !extraUsed);
+  $("score").textContent = total(); $("round").textContent = Math.min(round, 13) + "/13"; $("best").textContent = best;
+  fill($("upper"), UPPER, [["Top total", upperSum() + " / 63"], ["Top bonus", upperBonus() ? "+35" : "0"]]);
+  fill($("lower"), LOWER, [["Stacktzy bonus", bonusSz ? "+" + bonusSz : "0"]]);
+}
+function fill(col, list, sums) {
+  while (col.children.length > 1) col.removeChild(col.lastChild);
+  var live = rolls < 3;
+  list.forEach(function (x) {
+    var k = x[0], used = card[k] !== null, v = used ? card[k] : live ? value(k) : null;
+    var b = document.createElement("button"); b.className = "cat " + (used ? "used" : "open") + (!used && live && v > 0 ? " good" : "");
+    var s = document.createElement("span"); s.textContent = x[1];
+    var n = document.createElement("b"); n.textContent = v === null ? "" : v;
+    b.appendChild(s); b.appendChild(n);
+    b.disabled = used || !live;
+    b.setAttribute("aria-label", x[1] + (used ? ", scored " + v : live ? ", score " + v + " here" : ""));
+    b.addEventListener("click", function () { choose(k); });
+    col.appendChild(b);
+  });
+  sums.forEach(function (sm) {
+    var d = document.createElement("div"); d.className = "cat sum";
+    var s = document.createElement("span"); s.textContent = sm[0]; var n = document.createElement("b"); n.textContent = sm[1];
+    d.appendChild(s); d.appendChild(n); col.appendChild(d);
+  });
+}
+
+$("roll").addEventListener("click", roll);
+$("extra").addEventListener("click", function () { showAd("rewarded", function () { extraUsed = true; rolls = 1; say("Extra roll! Hold what you want and roll."); render(); }); });
+$("newGame").addEventListener("click", newGame);
+$("again").addEventListener("click", function () { $("over").hidden = true; showAd("interstitial", newGame); });
+newGame();
+})();
+</script>
+
+</body>
+</html>

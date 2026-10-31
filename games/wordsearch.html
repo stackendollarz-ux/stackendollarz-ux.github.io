@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{box-sizing:border-box}body{margin:0}img{max-width:100%}[hidden]{display:none!important}.adbar{display:none!important}</style>
+<script>
+/* Website preview: no ads here, so ad breaks and "watch an ad" buttons continue right away. */
+window.StackBridge = { postMessage: function (raw) {
+  var m = {}; try { m = JSON.parse(raw); } catch (e) {}
+  setTimeout(function () {
+    if (m.type === "interstitial" && window.stackAdClosed) window.stackAdClosed();
+    if (m.type === "rewarded" && window.stackRewardEarned) window.stackRewardEarned();
+  }, 0);
+} };
+</script>
+</head>
+<body>
+<title>Stack a Dollar Word Search</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&display=swap">
+<style>
+/* Layout: one screen. Level bar, the theme name, a cream letter grid on the felt to swipe across, the word list on the wooden rack, ad banner space. Same family look as the other Stack a Dollar games; one dark look by choice. */
+:root {
+  color-scheme: dark;
+  --felt: #5E9E1B; --felt-deep: #3F7A12; --bar: #17240C; --well: #24380F; --ink: #FFFFFF; --muted: #D8E8C4;
+  --wood: #9A5A2E; --wood-deep: #6E3D1D; --gold: #F4B321; --gold-ink: #2A1B00;
+  --p1: #F4B321; --p2: #39B8F2; --p3: #F2456B; --p4: #F28C28; --p5: #A77BF5; --p6: #2EC4A0;
+  --card: #FBF8EE; --edge: #B9AE93; --black: #18140F; --red: #C4162E;
+  --font: 'Baloo 2', 'Trebuchet MS', 'Segoe UI', Arial, sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { background: var(--felt-deep); color: var(--ink); font-family: var(--font); font-size: 1rem; font-weight: 600; display: flex; flex-direction: column; overflow: hidden; -webkit-user-select: none; user-select: none; }
+button { font: inherit; color: inherit; cursor: pointer; border: none; background: none; padding: 0; }
+button:focus-visible { outline: 3px solid #FFFFFF; outline-offset: 2px; }
+.bar { padding-inline: 16px; padding-block: 8px; background: var(--bar); display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 2px 10px; }
+.brand { flex: 0 0 100%; text-align: center; font-weight: 800; font-size: 1.15rem; line-height: 1.1; color: var(--gold); }
+.brand span { color: var(--ink); }
+.side { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; line-height: 1.1; }
+.side.r { align-items: flex-end; }
+.side span { color: var(--muted); font-size: 0.85rem; }
+.side b { font-size: 1.7rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.goal { background: var(--gold); color: var(--gold-ink); border-radius: 10px; padding: 2px 16px; text-align: center; line-height: 1.05; }
+.goal b { display: block; font-size: 1.5rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.goal span { font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; }
+.new { border: 2px solid #4C6A2C; border-radius: 8px; min-height: 40px; padding: 0 10px; font-size: 0.9rem; }
+.stage { position: relative; flex: 1 1 0; min-height: 0; padding-inline: 16px; padding-block: 12px 8px; background: radial-gradient(ellipse at 50% 40%, var(--felt) 0%, var(--felt-deep) 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; overflow: hidden; }
+#msg { min-height: 1.4em; text-align: center; font-weight: 800; color: var(--gold); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7); max-width: 460px; }
+.rack { padding-inline: 16px; padding-block: 10px 12px; background: var(--wood); border-top: 6px solid var(--wood-deep); box-shadow: inset 0 10px 14px rgba(0, 0, 0, 0.25); }
+.tools { max-width: 440px; margin-inline: auto; display: grid; grid-template-columns: repeat(var(--n, 2), minmax(0, 1fr)); gap: 8px; }
+.tool { min-height: 48px; border-radius: 10px; background: var(--bar); font-weight: 800; line-height: 1.1; padding: 4px; }
+.tool small { display: block; font-size: 0.72rem; color: var(--muted); font-weight: 600; }
+.tool.gold { background: var(--gold); color: var(--gold-ink); }
+.tool.gold small { color: var(--gold-ink); }
+.tool:disabled { opacity: 0.45; cursor: default; }
+.adbar { background: var(--bar); padding-inline: 16px; padding-block: 6px; }
+.ad { width: min(320px, 100%); height: 50px; margin-inline: auto; display: flex; align-items: center; justify-content: center; border: 1px dashed #4C6A2C; border-radius: 6px; color: #8FA878; font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; }
+.ad.live { border-color: transparent; color: transparent; }
+.veil { position: fixed; inset: 0; z-index: 10; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(8, 20, 2, 0.78); }
+.box { background: var(--bar); border: 3px solid var(--gold); border-radius: 14px; padding: 18px; width: 100%; max-width: 340px; display: flex; flex-direction: column; gap: 10px; text-align: center; }
+.box h2 { margin: 0; font-size: 1.5rem; font-weight: 800; color: var(--gold); line-height: 1.1; text-wrap: balance; }
+.box p { margin: 0; color: var(--muted); }
+.box .big { font-size: 2.6rem; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+.go { background: var(--gold); color: var(--gold-ink); border-radius: 10px; min-height: 48px; font-weight: 800; font-size: 1.1rem; }
+.go.alt { background: transparent; color: var(--ink); border: 2px solid #4C6A2C; }
+.go:disabled { opacity: 0.55; cursor: default; }
+.adfake { height: 180px; border: 1px dashed #4C6A2C; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #8FA878; letter-spacing: 0.08em; text-transform: uppercase; font-size: 0.85rem; }
+
+.theme { font-size: 1.2rem; font-weight: 800; color: var(--gold); text-transform: uppercase; letter-spacing: 0.08em; }
+#grid { width: min(100%, 420px, calc(100dvh - 400px)); min-width: 240px; aspect-ratio: 1; display: grid; gap: 2px; padding: 6px; border-radius: 12px; background: var(--card); box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4); touch-action: none; }
+.ce { display: flex; align-items: center; justify-content: center; border-radius: 6px; color: var(--black); font-weight: 800; line-height: 1; font-size: calc(min(420px, 100vw - 48px) / var(--n) * 0.52); }
+.ce.f { background: var(--fc); }
+.ce.sel { background: var(--gold); color: var(--gold-ink); }
+.ce.hint { animation: blink 0.5s 4; }
+@keyframes blink { 50% { background: #F2456B; color: #FFFFFF; } }
+#list { max-width: 440px; margin: 0 auto 10px; display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+#list span { padding: 2px 10px; border-radius: 999px; background: var(--bar); font-weight: 800; font-size: 0.92rem; letter-spacing: 0.04em; }
+#list span.done { background: var(--fc); color: var(--black); text-decoration: line-through; }
+@media (prefers-reduced-motion: reduce) { .ce.hint { animation: none; background: #F2456B; } }
+</style>
+
+<div class="bar">
+  <div class="brand">Stack a Dollar <span>Word Search</span></div>
+  <div class="side"><span>Found</span><b id="found">0/0</b></div>
+  <div class="goal"><b id="level">1</b><span>Level</span></div>
+  <div class="side r"><span>Time</span><b id="time">0:00</b></div>
+</div>
+<div class="stage">
+  <div class="theme" id="theme">Money</div>
+  <div id="grid" role="grid" aria-label="Letter grid. Swipe across a word."></div>
+  <div id="msg" role="status" aria-live="polite">Swipe across a word, or tap its first and last letters</div>
+</div>
+<div class="rack">
+  <div id="list" aria-label="Words to find"></div>
+  <div class="tools"><button class="tool" id="shuffle">New puzzle</button><button class="tool gold" id="hint">Hint<small>Watch an ad</small></button></div>
+</div>
+<div class="adbar"><div class="ad" id="adBanner">Ad space</div></div>
+<div class="veil" id="adBreak" hidden><div class="box">
+  <p id="adLabel">Ad break</p>
+  <div class="adfake">Ad shows here in the app</div>
+  <button class="go" id="adGo" disabled>Continue</button>
+</div></div>
+<div class="veil" id="won" hidden><div class="box">
+  <h2 id="wonT">Level 1 done!</h2>
+  <p id="wonP"></p>
+  <button class="go" id="next">Next level</button>
+</div></div>
+
+<script>
+(function () {
+"use strict";
+var $ = function (id) { return document.getElementById(id); }, GAME = "wordsearch";
+/* ---------- app bridge: the phone app connects these to AdMob and rewards ---------- */
+function post(o) { o.game = GAME; try { if (window.StackBridge && window.StackBridge.postMessage) { window.StackBridge.postMessage(JSON.stringify(o)); return true; } } catch (e) {} return false; }
+function showAd(kind, label, done) {
+  if (post({ type: kind })) { window[kind === "rewarded" ? "stackRewardEarned" : "stackAdClosed"] = function () { done(); }; return; }
+  var v = $("adBreak"), b = $("adGo"), n = kind === "rewarded" ? 5 : 3; $("adLabel").textContent = label || "Ad break";
+  v.hidden = false; b.disabled = true; b.textContent = "Continue in " + n;
+  var iv = setInterval(function () { n--; if (n > 0) b.textContent = "Continue in " + n; else { clearInterval(iv); b.disabled = false; b.textContent = "Continue"; b.focus(); } }, 1000);
+  b.onclick = function () { v.hidden = true; done(); };
+}
+if (post({ type: "banner" })) $("adBanner").classList.add("live");
+function store(k, v) { try { if (v === undefined) return localStorage.getItem("sad-" + GAME + "-" + k); localStorage.setItem("sad-" + GAME + "-" + k, v); } catch (e) { return null; } }
+
+var THEMES = [
+  ["Money", ["CASH", "COINS", "BANK", "SAVE", "DOLLAR", "WALLET", "PENNY", "BUDGET"]],
+  ["Fruit", ["APPLE", "MANGO", "GRAPE", "PEACH", "LEMON", "BANANA", "CHERRY", "PEAR"]],
+  ["Animals", ["TIGER", "ZEBRA", "HORSE", "EAGLE", "SHARK", "RABBIT", "MONKEY", "BEAR"]],
+  ["Sports", ["SOCCER", "TENNIS", "GOLF", "RUGBY", "BOXING", "HOCKEY", "SKATE", "SWIM"]],
+  ["Colors", ["RED", "GREEN", "PURPLE", "ORANGE", "YELLOW", "PINK", "BROWN", "SILVER"]],
+  ["Kitchen", ["SPOON", "FORK", "PLATE", "STOVE", "KETTLE", "BOWL", "KNIFE", "OVEN"]],
+  ["Weather", ["RAIN", "SNOW", "STORM", "CLOUD", "SUNNY", "WINDY", "THUNDER", "FOG"]],
+  ["Jobs", ["NURSE", "PILOT", "CHEF", "FARMER", "DOCTOR", "JUDGE", "BAKER", "COACH"]],
+  ["Travel", ["PLANE", "HOTEL", "BEACH", "TICKET", "MAP", "TRAIN", "CRUISE", "BAGS"]],
+  ["Music", ["DRUMS", "PIANO", "GUITAR", "SONG", "BEAT", "VIOLIN", "CHOIR", "TEMPO"]],
+  ["Ocean", ["WAVE", "CORAL", "WHALE", "TIDE", "SHELL", "OCTOPUS", "CRAB", "SALT"]],
+  ["Breakfast", ["EGGS", "BACON", "TOAST", "CEREAL", "JUICE", "COFFEE", "WAFFLE", "HONEY"]],
+  ["Body", ["HEART", "BRAIN", "ELBOW", "KNEE", "THUMB", "ANKLE", "SPINE", "LUNGS"]],
+  ["School", ["DESK", "CHALK", "PENCIL", "RULER", "BOOK", "TEACHER", "RECESS", "GRADE"]],
+  ["Garden", ["ROSE", "TULIP", "SEED", "SHOVEL", "DAISY", "HOSE", "SOIL", "FENCE"]],
+  ["Home", ["SOFA", "LAMP", "DOOR", "WINDOW", "CARPET", "TABLE", "CHAIR", "SHELF"]]
+];
+var FC = ["#F4B321", "#39B8F2", "#F2456B", "#F28C28", "#A77BF5", "#2EC4A0", "#C9F23A", "#F59BD0"];
+var level = Math.max(1, +store("level") || 1), N, grid, words, place, found, foundCells, startC = -1, dragging = false, path = [], t0, timer;
+
+function dirsFor(lv) { var d = [[0, 1], [1, 0]]; if (lv > 2) d.push([1, 1], [-1, 1]); if (lv > 5) d.push([0, -1], [-1, 0], [-1, -1], [1, -1]); return d; }
+function build() {
+  var th = THEMES[(level - 1) % THEMES.length]; N = level < 3 ? 8 : level < 6 ? 9 : 10;
+  words = th[1].filter(function (w) { return w.length <= N; }); $("theme").textContent = th[0];
+  var D = dirsFor(level);
+  for (var attempt = 0; attempt < 60; attempt++) {
+    grid = new Array(N * N).fill(""); place = {}; var ok = true;
+    words.slice().sort(function (a, b) { return b.length - a.length; }).forEach(function (w) {
+      if (!ok) return;
+      for (var tries = 0; tries < 200; tries++) {
+        var d = D[Math.floor(Math.random() * D.length)], r = Math.floor(Math.random() * N), c = Math.floor(Math.random() * N);
+        var er = r + d[0] * (w.length - 1), ec = c + d[1] * (w.length - 1);
+        if (er < 0 || er >= N || ec < 0 || ec >= N) continue;
+        var fits = true, cells = [];
+        for (var k = 0; k < w.length; k++) { var i = (r + d[0] * k) * N + c + d[1] * k; if (grid[i] && grid[i] !== w[k]) { fits = false; break; } cells.push(i); }
+        if (!fits) continue;
+        cells.forEach(function (i, k) { grid[i] = w[k]; }); place[w] = cells; return;
+      }
+      ok = false;
+    });
+    if (ok) break;
+  }
+  words = words.filter(function (w) { return place[w]; });
+  var AZ = "ABCDEFGHIJKLMNOPRSTUWY";
+  for (var i = 0; i < N * N; i++) if (!grid[i]) grid[i] = AZ[Math.floor(Math.random() * AZ.length)];
+  found = {}; foundCells = {}; path = []; startC = -1;
+  clearInterval(timer); t0 = Date.now(); timer = setInterval(showTime, 1000); showTime();
+  $("won").hidden = true; say("Swipe across a word, or tap its first and last letters"); render();
+}
+function showTime() { var s = Math.floor((Date.now() - t0) / 1000); $("time").textContent = Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); }
+function line(a, b) {
+  var ar = Math.floor(a / N), ac = a % N, br = Math.floor(b / N), bc = b % N, dr = br - ar, dc = bc - ac;
+  if (!(dr === 0 || dc === 0 || Math.abs(dr) === Math.abs(dc))) return null;
+  var n = Math.max(Math.abs(dr), Math.abs(dc)), sr = Math.sign(dr), sc = Math.sign(dc), out = [];
+  for (var k = 0; k <= n; k++) out.push((ar + sr * k) * N + ac + sc * k);
+  return out;
+}
+function check(cells) {
+  if (!cells || cells.length < 2) return false;
+  var s = cells.map(function (i) { return grid[i]; }).join(""), rev = s.split("").reverse().join("");
+  var w = words.filter(function (x) { return !found[x] && (x === s || x === rev); })[0];
+  if (!w) { say("Not a word on the list"); return false; }
+  var k = Object.keys(found).length; found[w] = FC[k % FC.length]; cells.forEach(function (i) { foundCells[i] = found[w]; });
+  say(w + "!");
+  if (Object.keys(found).length === words.length) win();
+  return true;
+}
+function win() {
+  clearInterval(timer); post({ type: "levelComplete", level: level });
+  $("wonT").textContent = "Level " + level + " done!"; $("wonP").textContent = "All " + words.length + " words in " + $("time").textContent + ".";
+  level++; store("level", level);
+  setTimeout(function () { $("won").hidden = false; $("next").focus(); }, 500);
+}
+
+function say(s) { $("msg").textContent = s; }
+function render() {
+  var g = $("grid"); g.style.gridTemplate = "repeat(" + N + ", 1fr) / repeat(" + N + ", 1fr)"; g.style.setProperty("--n", N); g.textContent = "";
+  grid.forEach(function (ch, i) {
+    var el = document.createElement("button"); el.className = "ce" + (foundCells[i] ? " f" : "") + (path.indexOf(i) >= 0 || i === startC ? " sel" : "");
+    if (foundCells[i]) el.style.setProperty("--fc", foundCells[i]);
+    el.textContent = ch; el.dataset.i = i; el.setAttribute("role", "gridcell");
+    el.setAttribute("aria-label", ch + ", row " + (Math.floor(i / N) + 1) + ", column " + (i % N + 1));
+    el.addEventListener("click", function (e) { if (e.detail === 0) tapCell(i); });
+    g.appendChild(el);
+  });
+  var l = $("list"); l.textContent = "";
+  words.forEach(function (w) { var s = document.createElement("span"); s.textContent = w; if (found[w]) { s.className = "done"; s.style.setProperty("--fc", found[w]); } l.appendChild(s); });
+  $("found").textContent = Object.keys(found).length + "/" + words.length; $("level").textContent = level;
+}
+function tapCell(i) {
+  if (startC < 0) { startC = i; path = [i]; say("Now tap the last letter"); render(); return; }
+  var cells = line(startC, i); startC = -1; path = [];
+  if (!check(cells)) { if (!cells) say("Words go in a straight line"); }
+  render();
+}
+function cellAt(x, y) { var el = document.elementFromPoint(x, y); el = el && el.closest ? el.closest(".ce") : null; return el ? +el.dataset.i : -1; }
+var g = $("grid"), downAt = -1, moved = false;
+g.addEventListener("pointerdown", function (e) { var i = cellAt(e.clientX, e.clientY); if (i < 0) return; e.preventDefault(); downAt = i; moved = false; dragging = true; try { g.setPointerCapture(e.pointerId); } catch (x) {} if (startC < 0) { path = [i]; render(); } });
+g.addEventListener("pointermove", function (e) {
+  if (!dragging) return; var i = cellAt(e.clientX, e.clientY); if (i < 0 || i === downAt && !moved) return;
+  moved = true; startC = -1; var l = line(downAt, i); if (l) { path = l; render(); }
+});
+function up(e) {
+  if (!dragging) return; dragging = false;
+  if (moved) { var cells = path.slice(); path = []; check(cells); render(); }
+  else tapCell(downAt);
+}
+g.addEventListener("pointerup", up); g.addEventListener("pointercancel", up);
+
+$("shuffle").addEventListener("click", build);
+$("hint").addEventListener("click", function () {
+  var left = words.filter(function (w) { return !found[w]; }); if (!left.length) return;
+  showAd("rewarded", "Watch to see where a word starts", function () {
+    var w = left[Math.floor(Math.random() * left.length)], el = $("grid").children[place[w][0]];
+    el.classList.add("hint"); el.focus(); say(w + " starts at the flashing letter");
+  });
+});
+$("next").addEventListener("click", function () { $("won").hidden = true; if ((level - 1) % 2 === 0) showAd("interstitial", "", build); else build(); });
+build();
+})();
+</script>
+
+</body>
+</html>

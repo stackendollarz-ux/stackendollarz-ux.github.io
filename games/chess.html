@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{box-sizing:border-box}body{margin:0}img{max-width:100%}[hidden]{display:none!important}.adbar{display:none!important}</style>
+<script>
+/* Website preview: no ads here, so ad breaks and "watch an ad" buttons continue right away. */
+window.StackBridge = { postMessage: function (raw) {
+  var m = {}; try { m = JSON.parse(raw); } catch (e) {}
+  setTimeout(function () {
+    if (m.type === "interstitial" && window.stackAdClosed) window.stackAdClosed();
+    if (m.type === "rewarded" && window.stackRewardEarned) window.stackRewardEarned();
+  }, 0);
+} };
+</script>
+</head>
+<body>
+<title>Stack a Dollar Chess</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&display=swap">
+<style>
+/* Layout: one screen. Score bar, a wooden-framed board of felt and cream squares with gold pieces against dark ones, tools and ad banner space. Same family look as the other Stack a Dollar games; one dark look by choice. */
+:root {
+  color-scheme: dark;
+  --felt: #5E9E1B; --felt-deep: #3F7A12; --bar: #17240C; --well: #24380F; --ink: #FFFFFF; --muted: #D8E8C4;
+  --wood: #9A5A2E; --wood-deep: #6E3D1D; --gold: #F4B321; --gold-ink: #2A1B00;
+  --p1: #F4B321; --p2: #39B8F2; --p3: #F2456B; --p4: #F28C28; --p5: #A77BF5; --p6: #2EC4A0;
+  --card: #FBF8EE; --edge: #B9AE93; --black: #18140F; --red: #C4162E;
+  --font: 'Baloo 2', 'Trebuchet MS', 'Segoe UI', Arial, sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { background: var(--felt-deep); color: var(--ink); font-family: var(--font); font-size: 1rem; font-weight: 600; display: flex; flex-direction: column; overflow: hidden; -webkit-user-select: none; user-select: none; }
+button { font: inherit; color: inherit; cursor: pointer; border: none; background: none; padding: 0; }
+button:focus-visible { outline: 3px solid #FFFFFF; outline-offset: 2px; }
+.bar { padding-inline: 16px; padding-block: 8px; background: var(--bar); display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 2px 10px; }
+.brand { flex: 0 0 100%; text-align: center; font-weight: 800; font-size: 1.15rem; line-height: 1.1; color: var(--gold); }
+.brand span { color: var(--ink); }
+.side { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; line-height: 1.1; }
+.side.r { align-items: flex-end; }
+.side span { color: var(--muted); font-size: 0.85rem; }
+.side b { font-size: 1.7rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.goal { background: var(--gold); color: var(--gold-ink); border-radius: 10px; padding: 2px 16px; text-align: center; line-height: 1.05; }
+.goal b { display: block; font-size: 1.5rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.goal span { font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; }
+.new { border: 2px solid #4C6A2C; border-radius: 8px; min-height: 40px; padding: 0 10px; font-size: 0.9rem; }
+.stage { position: relative; flex: 1 1 0; min-height: 0; padding-inline: 16px; padding-block: 12px 8px; background: radial-gradient(ellipse at 50% 40%, var(--felt) 0%, var(--felt-deep) 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; overflow: hidden; }
+#msg { min-height: 1.4em; text-align: center; font-weight: 800; color: var(--gold); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7); max-width: 460px; }
+.rack { padding-inline: 16px; padding-block: 10px 12px; background: var(--wood); border-top: 6px solid var(--wood-deep); box-shadow: inset 0 10px 14px rgba(0, 0, 0, 0.25); }
+.tools { max-width: 440px; margin-inline: auto; display: grid; grid-template-columns: repeat(var(--n, 2), minmax(0, 1fr)); gap: 8px; }
+.tool { min-height: 48px; border-radius: 10px; background: var(--bar); font-weight: 800; line-height: 1.1; padding: 4px; }
+.tool small { display: block; font-size: 0.72rem; color: var(--muted); font-weight: 600; }
+.tool.gold { background: var(--gold); color: var(--gold-ink); }
+.tool.gold small { color: var(--gold-ink); }
+.tool:disabled { opacity: 0.45; cursor: default; }
+.adbar { background: var(--bar); padding-inline: 16px; padding-block: 6px; }
+.ad { width: min(320px, 100%); height: 50px; margin-inline: auto; display: flex; align-items: center; justify-content: center; border: 1px dashed #4C6A2C; border-radius: 6px; color: #8FA878; font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; }
+.ad.live { border-color: transparent; color: transparent; }
+.veil { position: fixed; inset: 0; z-index: 10; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(8, 20, 2, 0.78); }
+.box { background: var(--bar); border: 3px solid var(--gold); border-radius: 14px; padding: 18px; width: 100%; max-width: 340px; display: flex; flex-direction: column; gap: 10px; text-align: center; }
+.box h2 { margin: 0; font-size: 1.5rem; font-weight: 800; color: var(--gold); line-height: 1.1; text-wrap: balance; }
+.box p { margin: 0; color: var(--muted); }
+.box .big { font-size: 2.6rem; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+.go { background: var(--gold); color: var(--gold-ink); border-radius: 10px; min-height: 48px; font-weight: 800; font-size: 1.1rem; }
+.go.alt { background: transparent; color: var(--ink); border: 2px solid #4C6A2C; }
+.go:disabled { opacity: 0.55; cursor: default; }
+.adfake { height: 180px; border: 1px dashed #4C6A2C; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #8FA878; letter-spacing: 0.08em; text-transform: uppercase; font-size: 0.85rem; }
+
+#board { width: min(100%, 440px, calc(100dvh - 340px)); min-width: 240px; aspect-ratio: 1; display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); border: 8px solid var(--wood-deep); border-radius: 10px; box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4); }
+.sq { position: relative; display: flex; align-items: center; justify-content: center; line-height: 1; }
+.sq.l { background: #E8DFC2; }
+.sq.d { background: #6E9A3A; }
+.sq.from { background: #C9A63A; }
+.sq.lastm { box-shadow: inset 0 0 0 100px rgba(244, 179, 33, 0.28); }
+.sq.chk { box-shadow: inset 0 0 0 100px rgba(196, 22, 46, 0.55); }
+.sq.to::after { content: ""; position: absolute; width: 28%; height: 28%; border-radius: 50%; background: rgba(23, 36, 12, 0.45); }
+.sq.to.cap::after { width: 86%; height: 86%; background: transparent; border: 4px solid rgba(23, 36, 12, 0.5); }
+.pc { font-size: calc(min(440px, 100vw - 48px) / 8 * 0.78); position: relative; z-index: 1; }
+.pc.w { color: var(--gold); text-shadow: 0 0 1px #6B4A00, 1px 1px 0 #6B4A00, -1px -1px 0 #6B4A00, 1px -1px 0 #6B4A00, -1px 1px 0 #6B4A00, 0 3px 3px rgba(0, 0, 0, 0.4); }
+.pc.b { color: #2A1F18; text-shadow: 0 0 1px #E8DFC2, 1px 1px 0 rgba(232, 223, 194, 0.6), -1px -1px 0 rgba(232, 223, 194, 0.6), 0 3px 3px rgba(0, 0, 0, 0.3); }
+.coord { position: absolute; font-size: 0.6rem; font-weight: 700; opacity: 0.6; color: #17240C; }
+.coord.f { right: 3px; bottom: 1px; } .coord.r { left: 3px; top: 1px; }
+</style>
+
+<div class="bar">
+  <div class="brand">Stack a Dollar <span>Chess</span></div>
+  <div class="side"><span>You took</span><b id="mine">0</b></div>
+  <div class="goal"><b id="wins">0</b><span>Wins</span></div>
+  <div class="side r"><span>Computer took</span><b id="theirs">0</b></div>
+  <button class="new" id="newGame">New game</button>
+</div>
+<div class="stage">
+  <div id="board" role="grid" aria-label="Chess board"></div>
+  <div id="msg" role="status" aria-live="polite">Your move. You play gold.</div>
+</div>
+<div class="rack"><div class="tools" style="--n: 3">
+  <button class="tool" id="undo">Undo</button>
+  <button class="tool gold" id="hint">Hint<small>Watch an ad</small></button>
+  <button class="tool" id="level">Level: Easy</button>
+</div></div>
+<div class="adbar"><div class="ad" id="adBanner">Ad space</div></div>
+<div class="veil" id="adBreak" hidden><div class="box">
+  <p id="adLabel">Ad break</p>
+  <div class="adfake">Ad shows here in the app</div>
+  <button class="go" id="adGo" disabled>Continue</button>
+</div></div>
+<div class="veil" id="over" hidden><div class="box">
+  <h2 id="overT">Checkmate!</h2>
+  <p id="overP"></p>
+  <button class="go" id="again">Play again</button>
+</div></div>
+
+<script>
+(function () {
+"use strict";
+var $ = function (id) { return document.getElementById(id); }, GAME = "chess";
+/* ---------- app bridge: the phone app connects these to AdMob and rewards ---------- */
+function post(o) { o.game = GAME; try { if (window.StackBridge && window.StackBridge.postMessage) { window.StackBridge.postMessage(JSON.stringify(o)); return true; } } catch (e) {} return false; }
+function showAd(kind, label, done) {
+  if (post({ type: kind })) { window[kind === "rewarded" ? "stackRewardEarned" : "stackAdClosed"] = function () { done(); }; return; }
+  var v = $("adBreak"), b = $("adGo"), n = kind === "rewarded" ? 5 : 3; $("adLabel").textContent = label || "Ad break";
+  v.hidden = false; b.disabled = true; b.textContent = "Continue in " + n;
+  var iv = setInterval(function () { n--; if (n > 0) b.textContent = "Continue in " + n; else { clearInterval(iv); b.disabled = false; b.textContent = "Continue"; b.focus(); } }, 1000);
+  b.onclick = function () { v.hidden = true; done(); };
+}
+if (post({ type: "banner" })) $("adBanner").classList.add("live");
+function store(k, v) { try { if (v === undefined) return localStorage.getItem("sad-" + GAME + "-" + k); localStorage.setItem("sad-" + GAME + "-" + k, v); } catch (e) { return null; } }
+
+var GLYPH = { k: "♚", q: "♛", r: "♜", b: "♝", n: "♞", p: "♟" }, PNAME = { k: "king", q: "queen", r: "rook", b: "bishop", n: "knight", p: "pawn" };
+var VAL = { p: 100, n: 320, b: 330, r: 500, q: 900, k: 0 };
+var LEVELS = [["Easy", 1], ["Medium", 2], ["Hard", 3]], lvl = +store("lvl") || 0, wins = +store("wins") || 0;
+var S, hist, sel = -1, last = null, thinking = false, done = false, hintM = null;
+var KN = [[-2, -1], [-2, 1], [-1, -2], [-1, 2], [1, -2], [1, 2], [2, -1], [2, 1]], KG = [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]];
+var DIAG = [[-1, -1], [-1, 1], [1, -1], [1, 1]], ORTH = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+var white = function (p) { return p && p === p.toUpperCase(); };
+var lo = function (p) { return p ? p.toLowerCase() : ""; };
+var on = function (r, c) { return r >= 0 && r < 8 && c >= 0 && c < 8; };
+
+function start() {
+  var rows = ["rnbqkbnr", "pppppppp", "", "", "", "", "PPPPPPPP", "RNBQKBNR"], b = [];
+  rows.forEach(function (row) { for (var c = 0; c < 8; c++) b.push(row[c] || null); });
+  S = { b: b, w: true, cr: { K: 1, Q: 1, k: 1, q: 1 }, ep: -1, capW: 0, capB: 0 };
+  hist = []; sel = -1; last = null; thinking = false; done = false; hintM = null;
+  $("over").hidden = true; say("Your move. You play gold."); render();
+}
+function attacked(b, sq, byW) {
+  var r = sq >> 3, c = sq & 7, i, k, p;
+  var pr = byW ? r + 1 : r - 1;
+  for (k = -1; k <= 1; k += 2) if (on(pr, c + k)) { p = b[pr * 8 + c + k]; if (p === (byW ? "P" : "p")) return true; }
+  for (i = 0; i < 8; i++) { var nr = r + KN[i][0], nc = c + KN[i][1]; if (on(nr, nc)) { p = b[nr * 8 + nc]; if (p === (byW ? "N" : "n")) return true; } }
+  for (i = 0; i < 8; i++) { nr = r + KG[i][0]; nc = c + KG[i][1]; if (on(nr, nc)) { p = b[nr * 8 + nc]; if (p === (byW ? "K" : "k")) return true; } }
+  function ray(ds, a, q) { for (var j = 0; j < 4; j++) { var rr = r + ds[j][0], cc = c + ds[j][1]; while (on(rr, cc)) { var x = b[rr * 8 + cc]; if (x) { if (white(x) === byW && (lo(x) === a || lo(x) === q)) return true; break; } rr += ds[j][0]; cc += ds[j][1]; } } return false; }
+  return ray(DIAG, "b", "q") || ray(ORTH, "r", "q");
+}
+function pseudo(s) {
+  var b = s.b, out = [], w = s.w;
+  for (var i = 0; i < 64; i++) {
+    var p = b[i]; if (!p || white(p) !== w) continue;
+    var t = lo(p), r = i >> 3, c = i & 7;
+    var add = function (to, extra) { var m = { f: i, t: to }; if (extra) for (var k in extra) m[k] = extra[k]; out.push(m); };
+    if (t === "p") {
+      var d = w ? -1 : 1, sr = w ? 6 : 1, pr = w ? 0 : 7, f1 = (r + d) * 8 + c;
+      if (on(r + d, c) && !b[f1]) { add(f1, r + d === pr ? { pro: 1 } : null); if (r === sr && !b[(r + 2 * d) * 8 + c]) add((r + 2 * d) * 8 + c, { dbl: 1 }); }
+      for (var k = -1; k <= 1; k += 2) if (on(r + d, c + k)) { var to = (r + d) * 8 + c + k, x = b[to]; if ((x && white(x) !== w) || to === s.ep) add(to, { pro: r + d === pr ? 1 : 0, epc: to === s.ep && !x ? 1 : 0 }); }
+    } else if (t === "n" || t === "k") {
+      (t === "n" ? KN : KG).forEach(function (o) { var nr = r + o[0], nc = c + o[1]; if (!on(nr, nc)) return; var x = b[nr * 8 + nc]; if (!x || white(x) !== w) add(nr * 8 + nc); });
+      if (t === "k") {
+        var row = w ? 7 : 0, K = w ? "K" : "k", Q = w ? "Q" : "q", R = w ? "R" : "r";
+        if (i === row * 8 + 4 && !attacked(b, i, !w)) {
+          if (s.cr[K] && !b[row * 8 + 5] && !b[row * 8 + 6] && b[row * 8 + 7] === R && !attacked(b, row * 8 + 5, !w) && !attacked(b, row * 8 + 6, !w)) add(row * 8 + 6, { cs: 1 });
+          if (s.cr[Q] && !b[row * 8 + 3] && !b[row * 8 + 2] && !b[row * 8 + 1] && b[row * 8] === R && !attacked(b, row * 8 + 3, !w) && !attacked(b, row * 8 + 2, !w)) add(row * 8 + 2, { cs: 1 });
+        }
+      }
+    } else {
+      var ds = t === "b" ? DIAG : t === "r" ? ORTH : DIAG.concat(ORTH);
+      ds.forEach(function (o) { var nr = r + o[0], nc = c + o[1]; while (on(nr, nc)) { var x = b[nr * 8 + nc]; if (x) { if (white(x) !== w) add(nr * 8 + nc); break; } add(nr * 8 + nc); nr += o[0]; nc += o[1]; } });
+    }
+  }
+  return out;
+}
+function make(s, m) {
+  var b = s.b.slice(), p = b[m.f], cap = b[m.t], w = s.w, cr = { K: s.cr.K, Q: s.cr.Q, k: s.cr.k, q: s.cr.q };
+  b[m.t] = p; b[m.f] = null;
+  if (m.epc) { cap = b[(m.f & ~7) + (m.t & 7)]; b[(m.f & ~7) + (m.t & 7)] = null; }
+  if (m.pro) b[m.t] = w ? "Q" : "q";
+  if (m.cs) { var row = m.t & ~7; if ((m.t & 7) === 6) { b[row + 5] = b[row + 7]; b[row + 7] = null; } else { b[row + 3] = b[row]; b[row] = null; } }
+  if (lo(p) === "k") { if (w) cr.K = cr.Q = 0; else cr.k = cr.q = 0; }
+  [[63, "K"], [56, "Q"], [7, "k"], [0, "q"]].forEach(function (x) { if (m.f === x[0] || m.t === x[0]) cr[x[1]] = 0; });
+  return { b: b, w: !w, cr: cr, ep: m.dbl ? (m.f + m.t) / 2 : -1, capW: s.capW + (cap && w ? 1 : 0), capB: s.capB + (cap && !w ? 1 : 0), cap: cap };
+}
+function kingSq(b, w) { var K = w ? "K" : "k"; return b.indexOf(K); }
+function legal(s) { return pseudo(s).filter(function (m) { var n = make(s, m); return !attacked(n.b, kingSq(n.b, s.w), !s.w); }); }
+function inCheck(s) { return attacked(s.b, kingSq(s.b, s.w), !s.w); }
+
+/* ---------- computer player ---------- */
+function evalS(s) {
+  var v = 0;
+  for (var i = 0; i < 64; i++) {
+    var p = s.b[i]; if (!p) continue;
+    var t = lo(p), r = i >> 3, c = i & 7, x = VAL[t], cen = 3.5 - Math.max(Math.abs(r - 3.5), Math.abs(c - 3.5));
+    if (t === "p") x += (white(p) ? 6 - r : r - 1) * 8 + (c > 1 && c < 6 ? cen * 4 : 0);
+    if (t === "n" || t === "b") x += cen * 8;
+    v += white(p) ? x : -x;
+  }
+  return s.w ? v : -v;
+}
+function negamax(s, d, a, z) {
+  var ms = legal(s);
+  if (!ms.length) return inCheck(s) ? -100000 - d : 0;
+  if (d === 0) return evalS(s);
+  ms.sort(function (x, y) { return (s.b[y.t] ? VAL[lo(s.b[y.t])] : 0) - (s.b[x.t] ? VAL[lo(s.b[x.t])] : 0); });
+  for (var i = 0; i < ms.length; i++) { var v = -negamax(make(s, ms[i]), d - 1, -z, -a); if (v > a) a = v; if (a >= z) break; }
+  return a;
+}
+function bestMove(s, depth, noise) {
+  var ms = legal(s), best = null, bv = -1e9;
+  ms.sort(function () { return Math.random() - 0.5; });
+  ms.forEach(function (m) { var v = -negamax(make(s, m), depth - 1, -1e9, 1e9) + (noise ? Math.random() * noise : 0); if (v > bv) { bv = v; best = m; } });
+  return best;
+}
+
+/* ---------- play ---------- */
+function play(m) {
+  hintM = null; S = make(S, m); last = m; sel = -1; render();
+  var ms = legal(S);
+  if (!ms.length) return end(inCheck(S) ? (S.w ? -1 : 1) : 0);
+  if (!S.w) { thinking = true; say(inCheck(S) ? "Check! Computer is thinking..." : "Computer is thinking..."); setTimeout(function () { var mv = bestMove(S, LEVELS[lvl][1], lvl === 0 ? 60 : 8); thinking = false; play(mv); }, 300); }
+  else say(inCheck(S) ? "Check! Protect your king." : "Your move.");
+}
+function end(w) {
+  done = true; render();
+  if (w === 1) { wins++; store("wins", wins); }
+  post({ type: "gameOver", won: w === 1, draw: w === 0, level: LEVELS[lvl][0] });
+  $("overT").textContent = w === 1 ? "Checkmate! You win" : w === 0 ? "Stalemate: a draw" : "Checkmate. Computer wins";
+  $("overP").textContent = w === 1 ? "Try a harder level next." : "Give it another shot.";
+  setTimeout(function () { $("over").hidden = false; $("again").focus(); }, 600);
+}
+function tap(i) {
+  if (!S.w || thinking || done) return;
+  var p = S.b[i], ms = legal(S);
+  if (p && white(p)) { sel = ms.some(function (m) { return m.f === i; }) ? i : -1; if (sel < 0) say("That piece has no moves"); else say(""); render(); return; }
+  if (sel < 0) return;
+  var m = ms.filter(function (x) { return x.f === sel && x.t === i; })[0];
+  if (!m) { sel = -1; render(); return; }
+  hist.push(JSON.stringify({ S: S, last: last }));
+  play(m);
+}
+
+function say(s) { $("msg").textContent = s; }
+function render() {
+  var g = $("board"); g.textContent = "";
+  var ms = S.w && !done ? legal(S) : [], dests = ms.filter(function (m) { return m.f === sel; }).map(function (m) { return m.t; });
+  var chk = inCheck(S) ? kingSq(S.b, S.w) : -1;
+  for (var i = 0; i < 64; i++) (function (i) {
+    var r = i >> 3, c = i & 7, p = S.b[i], el = document.createElement("button");
+    var lastm = last && (last.f === i || last.t === i), hinted = hintM && (hintM.f === i || hintM.t === i);
+    el.className = "sq " + ((r + c) % 2 ? "d" : "l") + (i === sel || hinted ? " from" : lastm ? " lastm" : "") + (i === chk ? " chk" : "") + (dests.indexOf(i) >= 0 ? " to" + (p ? " cap" : "") : "");
+    el.setAttribute("role", "gridcell");
+    if (p) { var s = document.createElement("span"); s.className = "pc " + (white(p) ? "w" : "b"); s.textContent = GLYPH[lo(p)] + "︎"; el.appendChild(s); }
+    if (r === 7) { var f = document.createElement("span"); f.className = "coord f"; f.textContent = "abcdefgh"[c]; el.appendChild(f); }
+    if (c === 0) { var rr = document.createElement("span"); rr.className = "coord r"; rr.textContent = 8 - r; el.appendChild(rr); }
+    el.setAttribute("aria-label", "abcdefgh"[c] + (8 - r) + (p ? ", " + (white(p) ? "your " : "computer ") + PNAME[lo(p)] : "") + (dests.indexOf(i) >= 0 ? ", move here" : ""));
+    el.addEventListener("click", function () { tap(i); });
+    g.appendChild(el);
+  })(i);
+  $("mine").textContent = S.capW; $("theirs").textContent = S.capB; $("wins").textContent = wins;
+  $("undo").disabled = !hist.length || !S.w || done || thinking; $("level").textContent = "Level: " + LEVELS[lvl][0];
+}
+
+$("undo").addEventListener("click", function () { if (!hist.length || !S.w || thinking) return; var h = JSON.parse(hist.pop()); S = h.S; last = h.last; sel = -1; hintM = null; say("Your move."); render(); });
+$("hint").addEventListener("click", function () {
+  if (!S.w || thinking || done) return;
+  showAd("rewarded", "Watch to see a good move", function () { hintM = bestMove(S, 2, 0); sel = -1; if (hintM) say("Try your " + PNAME[lo(S.b[hintM.f])] + " to the highlighted square"); render(); });
+});
+$("level").addEventListener("click", function () { lvl = (lvl + 1) % LEVELS.length; store("lvl", lvl); render(); say("Level set to " + LEVELS[lvl][0] + "."); });
+$("newGame").addEventListener("click", start);
+$("again").addEventListener("click", function () { $("over").hidden = true; showAd("interstitial", "", start); });
+start();
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{box-sizing:border-box}body{margin:0}img{max-width:100%}[hidden]{display:none!important}.adbar{display:none!important}</style>
+<script>
+/* Website preview: no ads here, so ad breaks and "watch an ad" buttons continue right away. */
+window.StackBridge = { postMessage: function (raw) {
+  var m = {}; try { m = JSON.parse(raw); } catch (e) {}
+  setTimeout(function () {
+    if (m.type === "interstitial" && window.stackAdClosed) window.stackAdClosed();
+    if (m.type === "rewarded" && window.stackRewardEarned) window.stackRewardEarned();
+  }, 0);
+} };
+</script>
+</head>
+<body>
+<title>Stack a Dollar Tap Away</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&display=swap">
+<style>
+/* Layout: one screen. Level bar with hearts, a grid of arrow bricks on the felt that slide off when their path is clear, tool shelf, ad banner space. Same family look as the other Stack a Dollar games; one dark look by choice. */
+:root {
+  color-scheme: dark;
+  --felt: #5E9E1B; --felt-deep: #3F7A12; --bar: #17240C; --well: #24380F; --ink: #FFFFFF; --muted: #D8E8C4;
+  --wood: #9A5A2E; --wood-deep: #6E3D1D; --gold: #F4B321; --gold-ink: #2A1B00; --heart: #F2456B;
+  --p1: #F4B321; --p2: #39B8F2; --p3: #F2456B; --p4: #F28C28; --p5: #A77BF5; --p6: #2EC4A0;
+  --font: 'Baloo 2', 'Trebuchet MS', 'Segoe UI', Arial, sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { background: var(--felt-deep); color: var(--ink); font-family: var(--font); font-size: 1rem; font-weight: 600; display: flex; flex-direction: column; overflow: hidden; -webkit-user-select: none; user-select: none; }
+button { font: inherit; color: inherit; cursor: pointer; border: none; background: none; padding: 0; }
+button:focus-visible { outline: 3px solid #FFFFFF; outline-offset: 2px; }
+
+.bar { padding-inline: 16px; padding-block: 8px; background: var(--bar); display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 2px 10px; }
+.brand { flex: 0 0 100%; text-align: center; font-weight: 800; font-size: 1.15rem; line-height: 1.1; color: var(--gold); }
+.brand span { color: var(--ink); }
+.side { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; line-height: 1.1; }
+.side.r { align-items: flex-end; }
+.side span { color: var(--muted); font-size: 0.85rem; }
+.side b { font-size: 1.7rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+#hearts { color: var(--heart); letter-spacing: 0.1em; }
+.goal { background: var(--gold); color: var(--gold-ink); border-radius: 10px; padding: 2px 16px; text-align: center; line-height: 1.05; }
+.goal b { display: block; font-size: 1.5rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.goal span { font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; }
+
+.stage { flex: 1 1 0; min-height: 0; padding-inline: 16px; padding-block: 12px 8px; background: radial-gradient(ellipse at 50% 40%, var(--felt) 0%, var(--felt-deep) 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; overflow: hidden; }
+#board { position: relative; flex: none; background: var(--bar); border-radius: 12px; box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35); }
+.b { position: absolute; border-radius: 8px; background: var(--c); color: rgba(0, 0, 0, 0.62); box-shadow: inset 0 -5px 0 rgba(0, 0, 0, 0.22), inset 0 3px 0 rgba(255, 255, 255, 0.3); display: flex; align-items: center; justify-content: center; transition: transform 0.38s ease-in, opacity 0.38s ease-in; }
+.b svg { width: 56%; height: 56%; }
+.b.fly { opacity: 0; pointer-events: none; }
+.b.bump { animation: bump 0.3s; }
+.b.hint { box-shadow: 0 0 0 3px #FFFFFF, inset 0 -5px 0 rgba(0, 0, 0, 0.22); }
+@keyframes bump { 30% { transform: translate(var(--bx), var(--by)); } }
+#msg { min-height: 1.4em; text-align: center; font-weight: 800; color: var(--gold); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7); }
+
+.rack { padding-inline: 16px; padding-block: 10px 12px; background: var(--wood); border-top: 6px solid var(--wood-deep); box-shadow: inset 0 10px 14px rgba(0, 0, 0, 0.25); }
+.tools { max-width: 440px; margin-inline: auto; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.tool { min-height: 48px; border-radius: 10px; background: var(--bar); font-weight: 800; line-height: 1.1; padding: 4px; }
+.tool small { display: block; font-size: 0.72rem; color: var(--muted); font-weight: 600; }
+.tool.gold { background: var(--gold); color: var(--gold-ink); }
+.tool.gold small { color: var(--gold-ink); }
+
+.adbar { background: var(--bar); padding-inline: 16px; padding-block: 6px; }
+.ad { width: min(320px, 100%); height: 50px; margin-inline: auto; display: flex; align-items: center; justify-content: center; border: 1px dashed #4C6A2C; border-radius: 6px; color: #8FA878; font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; }
+.ad.live { border-color: transparent; color: transparent; }
+
+.veil { position: fixed; inset: 0; z-index: 10; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(8, 20, 2, 0.78); }
+.box { background: var(--bar); border: 3px solid var(--gold); border-radius: 14px; padding: 18px; width: 100%; max-width: 340px; display: flex; flex-direction: column; gap: 10px; text-align: center; }
+.box h2 { margin: 0; font-size: 1.5rem; font-weight: 800; color: var(--gold); line-height: 1.1; text-wrap: balance; }
+.box p { margin: 0; color: var(--muted); }
+.go { background: var(--gold); color: var(--gold-ink); border-radius: 10px; min-height: 48px; font-weight: 800; font-size: 1.1rem; }
+.go.alt { background: transparent; color: var(--ink); border: 2px solid #4C6A2C; }
+.go:disabled { opacity: 0.55; cursor: default; }
+.adfake { height: 180px; border: 1px dashed #4C6A2C; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #8FA878; letter-spacing: 0.08em; text-transform: uppercase; font-size: 0.85rem; }
+@media (prefers-reduced-motion: reduce) { .b { transition: opacity 0.2s; } .b.bump { animation: none; } }
+</style>
+
+<div class="bar">
+  <div class="brand">Stack a Dollar <span>Tap Away</span></div>
+  <div class="side"><span>Bricks left</span><b id="left">0</b></div>
+  <div class="goal"><b id="level">1</b><span>Level</span></div>
+  <div class="side r"><span>Lives</span><b id="hearts" aria-label="3 lives">♥︎♥︎♥︎</b></div>
+</div>
+<div class="stage">
+  <div id="board" aria-label="Bricks"></div>
+  <div id="msg" role="status" aria-live="polite">Tap a brick to slide it out the way its arrow points</div>
+</div>
+<div class="rack"><div class="tools">
+  <button class="tool" id="restart">Restart</button>
+  <button class="tool gold" id="hint">Hint<small>Watch an ad</small></button>
+</div></div>
+<div class="adbar"><div class="ad" id="adBanner">Ad space</div></div>
+
+<div class="veil" id="won" hidden><div class="box">
+  <h2 id="wonT">Level 1 done!</h2>
+  <p id="wonP"></p>
+  <button class="go" id="next">Next level</button>
+</div></div>
+<div class="veil" id="lost" hidden><div class="box">
+  <h2>Out of lives</h2>
+  <p>Watch an ad to get 3 more lives and keep this board.</p>
+  <button class="go" id="rescue">Keep going</button>
+  <button class="go alt" id="retry">Try again</button>
+</div></div>
+<div class="veil" id="adBreak" hidden><div class="box">
+  <p id="adLabel">Ad break</p>
+  <div class="adfake">Ad shows here in the app</div>
+  <button class="go" id="adGo" disabled>Continue</button>
+</div></div>
+
+<script>
+(function () {
+"use strict";
+var $ = function (id) { return document.getElementById(id); };
+var DIRS = [[-1, 0], [0, 1], [1, 0], [0, -1]], DNAME = ["up", "right", "down", "left"], COLORS = ["--p1", "--p2", "--p3", "--p4", "--p5", "--p6"];
+var level = 1, N, bricks, start, lives, cs = 40, busy = false;
+try { level = Math.max(1, +localStorage.getItem("sad-tapaway-level") || 1); } catch (e) {}
+
+/* ---------- app bridge: the phone app connects these to AdMob and rewards ---------- */
+function post(o) { try { if (window.StackBridge && window.StackBridge.postMessage) { window.StackBridge.postMessage(JSON.stringify(o)); return true; } } catch (e) {} return false; }
+function showAd(kind, label, done) {
+  if (post({ type: kind, game: "tapaway" })) { window[kind === "rewarded" ? "stackRewardEarned" : "stackAdClosed"] = function () { done(); }; return; }
+  var v = $("adBreak"), b = $("adGo"), n = kind === "rewarded" ? 5 : 3; $("adLabel").textContent = label;
+  v.hidden = false; b.disabled = true; b.textContent = "Continue in " + n;
+  var iv = setInterval(function () { n--; if (n > 0) b.textContent = "Continue in " + n; else { clearInterval(iv); b.disabled = false; b.textContent = "Continue"; b.focus(); } }, 1000);
+  b.onclick = function () { v.hidden = true; done(); };
+}
+if (post({ type: "banner", game: "tapaway" })) $("adBanner").classList.add("live");
+
+/* ---------- rules ---------- */
+function at(r, c) { for (var i = 0; i < bricks.length; i++) if (bricks[i].on && bricks[i].r === r && bricks[i].c === c) return bricks[i]; return null; }
+function blocker(b) { var d = DIRS[b.d], r = b.r + d[0], c = b.c + d[1]; while (r >= 0 && c >= 0 && r < N && c < N) { var x = at(r, c); if (x) return x; r += d[0]; c += d[1]; } return null; }
+/* Build the board in reverse: each new brick must have a clear path past the ones already placed, so solving in reverse order always works. */
+function makeLevel() {
+  N = Math.min(9, 4 + Math.floor((level + 1) / 2));
+  var fill = Math.min(0.92, 0.6 + level * 0.02), cells = [];
+  for (var r = 0; r < N; r++) for (var c = 0; c < N; c++) cells.push([r, c]);
+  for (var i = cells.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), x = cells[i]; cells[i] = cells[j]; cells[j] = x; }
+  bricks = []; var want = Math.round(N * N * fill);
+  for (var pass = 0; pass < 3 && bricks.length < want; pass++) cells.forEach(function (p) {
+    if (bricks.length >= want || at(p[0], p[1])) return;
+    var ds = [0, 1, 2, 3].sort(function () { return Math.random() - 0.5; });
+    for (var k = 0; k < 4; k++) { var b = { r: p[0], c: p[1], d: ds[k], on: true, col: COLORS[Math.floor(Math.random() * COLORS.length)] }; if (!blocker(b)) { bricks.push(b); return; } }
+  });
+  bricks.forEach(function (b, i) { b.id = i; });
+  start = JSON.stringify(bricks); lives = 3; busy = false;
+  $("won").hidden = true; $("lost").hidden = true; say("Tap a brick to slide it out the way its arrow points"); layout();
+}
+function tap(b) {
+  if (busy || !b.on) return;
+  var el = document.querySelector('[data-id="' + b.id + '"]'), hit = blocker(b), d = DIRS[b.d];
+  if (hit) {
+    lives--; renderHearts();
+    el.style.setProperty("--bx", d[1] * 6 + "px"); el.style.setProperty("--by", d[0] * 6 + "px");
+    el.classList.remove("bump"); void el.offsetWidth; el.classList.add("bump");
+    say("Blocked! Something is in the way.");
+    if (lives <= 0) { busy = true; setTimeout(function () { $("lost").hidden = false; $("rescue").focus(); }, 350); }
+    return;
+  }
+  b.on = false; el.classList.add("fly"); el.style.transform = "translate(" + d[1] * N * cs + "px," + d[0] * N * cs + "px)";
+  say(""); $("left").textContent = left();
+  setTimeout(function () { el.remove(); }, 400);
+  if (!left()) win();
+}
+function left() { return bricks.filter(function (b) { return b.on; }).length; }
+function win() {
+  busy = true; post({ type: "levelComplete", game: "tapaway", level: level });
+  $("wonT").textContent = "Level " + level + " done!"; $("wonP").textContent = "Cleared with " + lives + (lives === 1 ? " life" : " lives") + " to spare.";
+  level++; try { localStorage.setItem("sad-tapaway-level", level); } catch (e) {}
+  setTimeout(function () { $("won").hidden = false; $("next").focus(); }, 450);
+}
+
+/* ---------- drawing ---------- */
+function say(s) { $("msg").textContent = s; }
+function renderHearts() { var h = ""; for (var i = 0; i < 3; i++) h += i < lives ? "♥︎" : "♡"; $("hearts").textContent = h; $("hearts").setAttribute("aria-label", lives + " lives"); }
+var ARROW = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20V5M5 11l7-7 7 7" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+function layout() {
+  var st = document.querySelector(".stage"), w = st.clientWidth - 32, h = st.clientHeight - 50;
+  cs = Math.max(28, Math.floor(Math.min(56, (w - 12) / N, (h - 12) / N)));
+  render();
+}
+function render() {
+  var bd = $("board"), pad = 6; bd.style.width = (N * cs + pad * 2) + "px"; bd.style.height = (N * cs + pad * 2) + "px"; bd.textContent = "";
+  bricks.forEach(function (b) {
+    if (!b.on) return;
+    var el = document.createElement("button"); el.className = "b"; el.dataset.id = b.id;
+    el.style.setProperty("--c", "var(" + b.col + ")");
+    el.style.width = (cs - 4) + "px"; el.style.height = (cs - 4) + "px"; el.style.left = (pad + b.c * cs + 2) + "px"; el.style.top = (pad + b.r * cs + 2) + "px";
+    el.innerHTML = ARROW; el.firstChild.style.transform = "rotate(" + b.d * 90 + "deg)";
+    el.setAttribute("aria-label", "Brick pointing " + DNAME[b.d] + ", row " + (b.r + 1) + ", column " + (b.c + 1));
+    el.addEventListener("click", function () { tap(b); });
+    bd.appendChild(el);
+  });
+  $("left").textContent = left(); $("level").textContent = level; renderHearts();
+}
+
+$("restart").addEventListener("click", function () { bricks = JSON.parse(start); lives = 3; busy = false; say(""); render(); });
+$("hint").addEventListener("click", function () {
+  if (busy) return;
+  showAd("rewarded", "Watch to see a safe brick", function () {
+    var ok = bricks.filter(function (b) { return b.on && !blocker(b); })[0]; if (!ok) return;
+    var el = document.querySelector('[data-id="' + ok.id + '"]'); if (el) { el.classList.add("hint"); el.focus(); }
+    say("The outlined brick is safe to tap");
+  });
+});
+$("rescue").addEventListener("click", function () { $("lost").hidden = true; showAd("rewarded", "Watch to get 3 more lives", function () { lives = 3; busy = false; renderHearts(); say("3 more lives"); }); });
+$("retry").addEventListener("click", function () { $("lost").hidden = true; showAd("interstitial", "Ad break", function () { bricks = JSON.parse(start); lives = 3; busy = false; render(); }); });
+$("next").addEventListener("click", function () { $("won").hidden = true; if ((level - 1) % 2 === 0) showAd("interstitial", "Ad break", makeLevel); else makeLevel(); });
+window.addEventListener("resize", layout);
+makeLevel();
+})();
+</script>
+
+</body>
+</html>

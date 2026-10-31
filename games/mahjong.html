@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{box-sizing:border-box}body{margin:0}img{max-width:100%}[hidden]{display:none!important}.adbar{display:none!important}</style>
+<script>
+/* Website preview: no ads here, so ad breaks and "watch an ad" buttons continue right away. */
+window.StackBridge = { postMessage: function (raw) {
+  var m = {}; try { m = JSON.parse(raw); } catch (e) {}
+  setTimeout(function () {
+    if (m.type === "interstitial" && window.stackAdClosed) window.stackAdClosed();
+    if (m.type === "rewarded" && window.stackRewardEarned) window.stackRewardEarned();
+  }, 0);
+} };
+</script>
+</head>
+<body>
+<title>Stack a Dollar Mahjong</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&display=swap">
+<style>
+/* Layout: one screen. Score bar, a stacked pyramid of ivory tiles on the felt, a wooden shelf of tools (undo, hint, shuffle), ad banner space at the bottom. Same family look as the other Stack a Dollar games; one dark look by choice. */
+:root {
+  color-scheme: dark;
+  --felt: #5E9E1B; --felt-deep: #3F7A12; --bar: #17240C; --ink: #FFFFFF; --muted: #D8E8C4;
+  --wood: #9A5A2E; --wood-deep: #6E3D1D; --gold: #F4B321; --gold-ink: #2A1B00;
+  --tile: #FBF8EE; --tile-side: #C9B98F; --tile-dim: #CFCAB8; --bill: #2E7D1F;
+  --font: 'Baloo 2', 'Trebuchet MS', 'Segoe UI', Arial, sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { background: var(--felt-deep); color: var(--ink); font-family: var(--font); font-size: 1rem; font-weight: 600; display: flex; flex-direction: column; overflow: hidden; -webkit-user-select: none; user-select: none; }
+button { font: inherit; color: inherit; cursor: pointer; border: none; background: none; padding: 0; }
+button:focus-visible { outline: 3px solid #FFFFFF; outline-offset: 2px; }
+
+.bar { padding-inline: 16px; padding-block: 8px; background: var(--bar); display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 2px 10px; }
+.brand { flex: 0 0 100%; text-align: center; font-weight: 800; font-size: 1.15rem; line-height: 1.1; color: var(--gold); }
+.brand span { color: var(--ink); }
+.side { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; line-height: 1.1; }
+.side.r { align-items: flex-end; }
+.side span { color: var(--muted); font-size: 0.85rem; }
+.side b { font-size: 1.7rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.goal { background: var(--gold); color: var(--gold-ink); border-radius: 10px; padding: 2px 16px; text-align: center; line-height: 1.05; }
+.goal b { display: block; font-size: 1.5rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.goal span { font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; }
+.new { border: 2px solid #4C6A2C; border-radius: 8px; min-height: 40px; padding: 0 10px; font-size: 0.9rem; }
+
+.stage { position: relative; flex: 1 1 0; min-height: 0; padding-inline: 16px; padding-block: 14px 8px; background: radial-gradient(ellipse at 50% 40%, var(--felt) 0%, var(--felt-deep) 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; }
+#board { position: relative; flex: none; }
+.t { position: absolute; border-radius: 6px; background: var(--tile); color: var(--fc); box-shadow: 3px 4px 0 var(--tile-side), 3px 6px 6px rgba(0, 0, 0, 0.4); display: flex; align-items: center; justify-content: center; font-weight: 800; line-height: 1; transition: transform 0.1s; }
+.t.lock { background: var(--tile-dim); cursor: default; }
+.t.sel { box-shadow: 0 0 0 3px var(--gold), 3px 6px 6px rgba(0, 0, 0, 0.4); transform: translateY(-3px); }
+.t.hint { box-shadow: 0 0 0 3px #FFFFFF, 3px 6px 6px rgba(0, 0, 0, 0.4); }
+.t.no { animation: shake 0.3s; }
+.t .bill { font-size: 0.62em; background: #F4B321; color: #2A1B00; border-radius: 50%; width: 1.9em; height: 1.9em; display: inline-flex; align-items: center; justify-content: center; box-shadow: inset 0 -2px 0 #A87700, inset 0 0 0 2px #FFD666; letter-spacing: -0.04em; }
+@keyframes shake { 25% { translate: -4px 0; } 75% { translate: 4px 0; } }
+#msg { min-height: 1.4em; text-align: center; font-size: 1rem; font-weight: 800; color: var(--gold); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7); }
+
+.rack { padding-inline: 16px; padding-block: 10px 12px; background: var(--wood); border-top: 6px solid var(--wood-deep); box-shadow: inset 0 10px 14px rgba(0, 0, 0, 0.25); }
+.tools { max-width: 440px; margin-inline: auto; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.tool { min-height: 48px; border-radius: 10px; background: var(--bar); font-weight: 800; line-height: 1.1; padding: 4px; }
+.tool small { display: block; font-size: 0.75rem; color: var(--muted); font-weight: 600; }
+.tool.gold { background: var(--gold); color: var(--gold-ink); }
+.tool.gold small { color: var(--gold-ink); }
+.tool:disabled { opacity: 0.45; cursor: default; }
+
+.adbar { background: var(--bar); padding-inline: 16px; padding-block: 6px; }
+.ad { width: min(320px, 100%); height: 50px; margin-inline: auto; display: flex; align-items: center; justify-content: center; border: 1px dashed #4C6A2C; border-radius: 6px; color: #8FA878; font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; }
+.ad.live { border-color: transparent; color: transparent; }
+
+.veil { position: fixed; inset: 0; z-index: 10; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(8, 20, 2, 0.78); }
+.box { background: var(--bar); border: 3px solid var(--gold); border-radius: 14px; padding: 18px; width: 100%; max-width: 340px; display: flex; flex-direction: column; gap: 10px; text-align: center; }
+.box h2 { margin: 0; font-size: 1.5rem; font-weight: 800; color: var(--gold); line-height: 1.1; text-wrap: balance; }
+.box p { margin: 0; color: var(--muted); }
+.go { background: var(--gold); color: var(--gold-ink); border-radius: 10px; min-height: 48px; font-weight: 800; font-size: 1.1rem; }
+.go:disabled { opacity: 0.55; cursor: default; }
+.adfake { height: 180px; border: 1px dashed #4C6A2C; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #8FA878; letter-spacing: 0.08em; text-transform: uppercase; font-size: 0.85rem; }
+@media (prefers-reduced-motion: reduce) { .t, .t.no { transition: none; animation: none; } }
+</style>
+
+<div class="bar">
+  <div class="brand">Stack a Dollar <span>Mahjong</span></div>
+  <div class="side"><span>Score</span><b id="score">0</b></div>
+  <div class="goal"><b id="left">68</b><span>Tiles left</span></div>
+  <div class="side r"><span>Matches</span><b id="avail">0</b></div>
+  <button class="new" id="newGame">New game</button>
+</div>
+<div class="stage">
+  <div id="board" aria-label="Tiles"></div>
+  <div id="msg" role="status" aria-live="polite">Match two free tiles. A tile is free when nothing covers it and one side is open.</div>
+</div>
+<div class="rack"><div class="tools">
+  <button class="tool" id="undo">Undo</button>
+  <button class="tool" id="hint">Hint</button>
+  <button class="tool gold" id="shuffle">Shuffle<small>Watch an ad</small></button>
+</div></div>
+<div class="adbar"><div class="ad" id="adBanner">Ad space</div></div>
+
+<div class="veil" id="won" hidden><div class="box">
+  <h2 id="wonT">Board cleared!</h2>
+  <p id="wonP"></p>
+  <button class="go" id="again">Play again</button>
+</div></div>
+<div class="veil" id="adBreak" hidden><div class="box">
+  <p id="adLabel">Ad break</p>
+  <div class="adfake">Ad shows here in the app</div>
+  <button class="go" id="adGo" disabled>Continue</button>
+</div></div>
+
+<script>
+(function () {
+"use strict";
+var $ = function (id) { return document.getElementById(id); };
+var FACES = [
+  { t: "1", c: "#2A1B00", b: 1 }, { t: "5", c: "#2A1B00", b: 1 }, { t: "10", c: "#2A1B00", b: 1 }, { t: "20", c: "#2A1B00", b: 1 }, { t: "50", c: "#2A1B00", b: 1 }, { t: "100", c: "#2A1B00", b: 1 },
+  { t: "♠︎", c: "#18140F" }, { t: "♥︎", c: "#C4162E" }, { t: "♣︎", c: "#1F6E2A" }, { t: "♦︎", c: "#D2600F" },
+  { t: "★", c: "#B07800" }, { t: "●", c: "#1F5FD1" }, { t: "▲", c: "#7A3FD6" }, { t: "■", c: "#0E8A74" }, { t: "◆", c: "#C2307A" }, { t: "✚", c: "#C4162E" }, { t: "✿", c: "#7A3FD6" }
+];
+var NAMES = ["1 coin", "5 coins", "10 coins", "20 coins", "50 coins", "100 coins", "spade", "heart", "club", "diamond", "star", "dot", "triangle", "square", "gem", "cross", "flower"];
+var COLS = 8, ROWS = 6;
+var POS = [];
+(function () {
+  var r, c;
+  for (r = 0; r < 6; r++) for (c = 0; c < 8; c++) POS.push({ l: 0, r: r, c: c });
+  for (r = 1; r < 5; r++) for (c = 2; c < 6; c++) POS.push({ l: 1, r: r, c: c });
+  for (r = 2; r < 4; r++) for (c = 3; c < 5; c++) POS.push({ l: 2, r: r, c: c });
+})();
+var tiles, hist, score, sel = -1, hintPair = null, tw = 40;
+
+/* ---------- app bridge: the phone app connects these to AdMob and rewards ---------- */
+function post(o) { try { if (window.StackBridge && window.StackBridge.postMessage) { window.StackBridge.postMessage(JSON.stringify(o)); return true; } } catch (e) {} return false; }
+function showAd(kind, done) {
+  if (post({ type: kind, game: "mahjong" })) { window[kind === "rewarded" ? "stackRewardEarned" : "stackAdClosed"] = function () { done(); }; return; }
+  var v = $("adBreak"), b = $("adGo"), n = kind === "rewarded" ? 5 : 3; $("adLabel").textContent = kind === "rewarded" ? "Watch to shuffle the tiles" : "Ad break";
+  v.hidden = false; b.disabled = true; b.textContent = "Continue in " + n;
+  var iv = setInterval(function () { n--; if (n > 0) b.textContent = "Continue in " + n; else { clearInterval(iv); b.disabled = false; b.textContent = "Continue"; b.focus(); } }, 1000);
+  b.onclick = function () { v.hidden = true; done(); };
+}
+if (post({ type: "banner", game: "mahjong" })) $("adBanner").classList.add("live");
+
+/* ---------- rules ---------- */
+function key(l, r, c) { return l + "-" + r + "-" + c; }
+function freeIn(p, alive) {
+  if (alive[key(p.l + 1, p.r, p.c)]) return false;
+  return !alive[key(p.l, p.r, p.c - 1)] || !alive[key(p.l, p.r, p.c + 1)];
+}
+function aliveMap(list) { var m = {}; list.forEach(function (t) { if (t.on) m[key(t.l, t.r, t.c)] = t; }); return m; }
+function isFree(t) { return freeIn(t, aliveMap(tiles)); }
+/* Deal faces by removing random free pairs from the layout, so every deal can be cleared. */
+function assign(list) {
+  for (var tries = 0; tries < 200; tries++) {
+    var alive = {}, pairs = [], left = list.slice();
+    list.forEach(function (t) { alive[key(t.l, t.r, t.c)] = t; });
+    while (left.length) {
+      var free = left.filter(function (t) { return freeIn(t, alive); });
+      if (free.length < 2) break;
+      var a = free.splice(Math.floor(Math.random() * free.length), 1)[0], b = free[Math.floor(Math.random() * free.length)];
+      pairs.push([a, b]); [a, b].forEach(function (t) { delete alive[key(t.l, t.r, t.c)]; left.splice(left.indexOf(t), 1); });
+    }
+    if (left.length) continue;
+    var faces = []; for (var i = 0; i < pairs.length; i++) faces.push(i % FACES.length);
+    for (i = faces.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), x = faces[i]; faces[i] = faces[j]; faces[j] = x; }
+    pairs.forEach(function (p, k) { p[0].f = faces[k]; p[1].f = faces[k]; });
+    return true;
+  }
+  return false;
+}
+function matches() {
+  var m = aliveMap(tiles), free = tiles.filter(function (t) { return t.on && freeIn(t, m); }), out = [];
+  for (var i = 0; i < free.length; i++) for (var j = i + 1; j < free.length; j++) if (free[i].f === free[j].f) out.push([free[i], free[j]]);
+  return out;
+}
+function newGame() {
+  tiles = POS.map(function (p, i) { return { id: i, l: p.l, r: p.r, c: p.c, f: 0, on: true }; });
+  assign(tiles); hist = []; score = 0; sel = -1; hintPair = null;
+  $("won").hidden = true; say("Match two free tiles. A tile is free when nothing covers it and one side is open."); render();
+}
+function tap(t) {
+  hintPair = null;
+  if (!isFree(t)) { say("That tile is blocked"); return shake(t.id); }
+  if (sel < 0) { sel = t.id; say(""); return render(); }
+  if (sel === t.id) { sel = -1; return render(); }
+  var a = tiles[sel];
+  if (a.f !== t.f) { sel = t.id; say(""); return render(); }
+  hist.push([a.id, t.id]); a.on = false; t.on = false; sel = -1; score += 10;
+  var left = tiles.filter(function (x) { return x.on; }).length;
+  render();
+  if (!left) return win();
+  if (!matches().length) say("No matches left. Shuffle or undo.");
+  else say("");
+}
+function win() {
+  post({ type: "gameOver", game: "mahjong", score: score, cleared: true });
+  $("wonP").textContent = "Score " + score + ".";
+  setTimeout(function () { $("won").hidden = false; $("again").focus(); }, 400);
+}
+
+/* ---------- drawing ---------- */
+function say(s) { $("msg").textContent = s; }
+function shake(id) { var el = document.querySelector('[data-id="' + id + '"]'); if (!el) return; el.classList.remove("no"); void el.offsetWidth; el.classList.add("no"); }
+function layout() {
+  var st = document.querySelector(".stage"), w = st.clientWidth - 32, h = st.clientHeight - 70;
+  tw = Math.max(26, Math.floor(Math.min(56, w / (COLS + 0.4), h / (ROWS * 1.3 + 0.4))));
+  render();
+}
+function render() {
+  var th = Math.round(tw * 1.3), b = $("board"), m = aliveMap(tiles), lift = Math.max(3, Math.round(tw * 0.1));
+  b.style.width = (COLS * tw + 6) + "px"; b.style.height = (ROWS * th + 8) + "px"; b.textContent = "";
+  tiles.slice().sort(function (x, y) { return x.l - y.l || x.r - y.r || x.c - y.c; }).forEach(function (t) {
+    if (!t.on) return;
+    var free = freeIn(t, m), F = FACES[t.f], el = document.createElement("button");
+    el.className = "t" + (free ? "" : " lock") + (sel === t.id ? " sel" : "") + (hintPair && hintPair.indexOf(t) >= 0 ? " hint" : "");
+    el.dataset.id = t.id;
+    el.style.width = (tw - 3) + "px"; el.style.height = (th - 4) + "px";
+    el.style.left = (t.c * tw + lift * 2 - t.l * lift) + "px"; el.style.top = (t.r * th + lift * 2 - t.l * lift) + "px";
+    el.style.setProperty("--fc", F.c); el.style.fontSize = (F.b ? tw * 0.4 : tw * 0.62) + "px";
+    if (F.b) { var s = document.createElement("span"); s.className = "bill"; s.textContent = F.t; el.appendChild(s); } else el.textContent = F.t;
+    el.setAttribute("aria-label", NAMES[t.f] + (free ? "" : ", blocked") + (sel === t.id ? ", selected" : ""));
+    el.addEventListener("click", function () { tap(t); });
+    b.appendChild(el);
+  });
+  var left = tiles.filter(function (x) { return x.on; }).length;
+  $("score").textContent = score; $("left").textContent = left; $("avail").textContent = matches().length;
+  $("undo").disabled = !hist.length;
+}
+
+$("undo").addEventListener("click", function () { var p = hist.pop(); if (!p) return; tiles[p[0]].on = tiles[p[1]].on = true; score = Math.max(0, score - 10); sel = -1; say(""); render(); });
+$("hint").addEventListener("click", function () { var m = matches(); sel = -1; if (m.length) { hintPair = m[Math.floor(Math.random() * m.length)]; say(""); } else say("No matches left. Shuffle or undo."); render(); });
+$("shuffle").addEventListener("click", function () {
+  showAd("rewarded", function () { var on = tiles.filter(function (t) { return t.on; }); assign(on); hist = []; sel = -1; hintPair = null; say("Tiles shuffled"); render(); });
+});
+$("newGame").addEventListener("click", newGame);
+$("again").addEventListener("click", function () { $("won").hidden = true; showAd("interstitial", newGame); });
+window.addEventListener("resize", layout);
+newGame(); layout();
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{box-sizing:border-box}body{margin:0}img{max-width:100%}[hidden]{display:none!important}.adbar{display:none!important}</style>
+<script>
+/* Website preview: no ads here, so ad breaks and "watch an ad" buttons continue right away. */
+window.StackBridge = { postMessage: function (raw) {
+  var m = {}; try { m = JSON.parse(raw); } catch (e) {}
+  setTimeout(function () {
+    if (m.type === "interstitial" && window.stackAdClosed) window.stackAdClosed();
+    if (m.type === "rewarded" && window.stackRewardEarned) window.stackRewardEarned();
+  }, 0);
+} };
+</script>
+</head>
+<body>
+<title>Stack a Dollar Merge</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&display=swap">
+<style>
+/* Layout: one screen. Score bar, a 4x4 board on the felt where matching coin stacks merge into bigger ones when you swipe, tools and ad banner space. Same family look as the other Stack a Dollar games; one dark look by choice. */
+:root {
+  color-scheme: dark;
+  --felt: #5E9E1B; --felt-deep: #3F7A12; --bar: #17240C; --well: #24380F; --ink: #FFFFFF; --muted: #D8E8C4;
+  --wood: #9A5A2E; --wood-deep: #6E3D1D; --gold: #F4B321; --gold-ink: #2A1B00;
+  --p1: #F4B321; --p2: #39B8F2; --p3: #F2456B; --p4: #F28C28; --p5: #A77BF5; --p6: #2EC4A0;
+  --card: #FBF8EE; --edge: #B9AE93; --black: #18140F; --red: #C4162E;
+  --font: 'Baloo 2', 'Trebuchet MS', 'Segoe UI', Arial, sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { background: var(--felt-deep); color: var(--ink); font-family: var(--font); font-size: 1rem; font-weight: 600; display: flex; flex-direction: column; overflow: hidden; -webkit-user-select: none; user-select: none; }
+button { font: inherit; color: inherit; cursor: pointer; border: none; background: none; padding: 0; }
+button:focus-visible { outline: 3px solid #FFFFFF; outline-offset: 2px; }
+.bar { padding-inline: 16px; padding-block: 8px; background: var(--bar); display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 2px 10px; }
+.brand { flex: 0 0 100%; text-align: center; font-weight: 800; font-size: 1.15rem; line-height: 1.1; color: var(--gold); }
+.brand span { color: var(--ink); }
+.side { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; line-height: 1.1; }
+.side.r { align-items: flex-end; }
+.side span { color: var(--muted); font-size: 0.85rem; }
+.side b { font-size: 1.7rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.goal { background: var(--gold); color: var(--gold-ink); border-radius: 10px; padding: 2px 16px; text-align: center; line-height: 1.05; }
+.goal b { display: block; font-size: 1.5rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.goal span { font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; }
+.new { border: 2px solid #4C6A2C; border-radius: 8px; min-height: 40px; padding: 0 10px; font-size: 0.9rem; }
+.stage { position: relative; flex: 1 1 0; min-height: 0; padding-inline: 16px; padding-block: 12px 8px; background: radial-gradient(ellipse at 50% 40%, var(--felt) 0%, var(--felt-deep) 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; overflow: hidden; }
+#msg { min-height: 1.4em; text-align: center; font-weight: 800; color: var(--gold); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7); max-width: 460px; }
+.rack { padding-inline: 16px; padding-block: 10px 12px; background: var(--wood); border-top: 6px solid var(--wood-deep); box-shadow: inset 0 10px 14px rgba(0, 0, 0, 0.25); }
+.tools { max-width: 440px; margin-inline: auto; display: grid; grid-template-columns: repeat(var(--n, 2), minmax(0, 1fr)); gap: 8px; }
+.tool { min-height: 48px; border-radius: 10px; background: var(--bar); font-weight: 800; line-height: 1.1; padding: 4px; }
+.tool small { display: block; font-size: 0.72rem; color: var(--muted); font-weight: 600; }
+.tool.gold { background: var(--gold); color: var(--gold-ink); }
+.tool.gold small { color: var(--gold-ink); }
+.tool:disabled { opacity: 0.45; cursor: default; }
+.adbar { background: var(--bar); padding-inline: 16px; padding-block: 6px; }
+.ad { width: min(320px, 100%); height: 50px; margin-inline: auto; display: flex; align-items: center; justify-content: center; border: 1px dashed #4C6A2C; border-radius: 6px; color: #8FA878; font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; }
+.ad.live { border-color: transparent; color: transparent; }
+.veil { position: fixed; inset: 0; z-index: 10; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(8, 20, 2, 0.78); }
+.box { background: var(--bar); border: 3px solid var(--gold); border-radius: 14px; padding: 18px; width: 100%; max-width: 340px; display: flex; flex-direction: column; gap: 10px; text-align: center; }
+.box h2 { margin: 0; font-size: 1.5rem; font-weight: 800; color: var(--gold); line-height: 1.1; text-wrap: balance; }
+.box p { margin: 0; color: var(--muted); }
+.box .big { font-size: 2.6rem; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+.go { background: var(--gold); color: var(--gold-ink); border-radius: 10px; min-height: 48px; font-weight: 800; font-size: 1.1rem; }
+.go.alt { background: transparent; color: var(--ink); border: 2px solid #4C6A2C; }
+.go:disabled { opacity: 0.55; cursor: default; }
+.adfake { height: 180px; border: 1px dashed #4C6A2C; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #8FA878; letter-spacing: 0.08em; text-transform: uppercase; font-size: 0.85rem; }
+
+#board { width: min(100%, 400px, calc(100dvh - 340px)); min-width: 240px; aspect-ratio: 1; display: grid; grid-template: repeat(4, 1fr) / repeat(4, 1fr); gap: 8px; padding: 8px; border-radius: 14px; background: var(--bar); box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4); touch-action: none; }
+.t { border-radius: 10px; background: var(--well); display: flex; align-items: center; justify-content: center; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+.t.v { background: var(--c); color: var(--tc); box-shadow: inset 0 -5px 0 rgba(0, 0, 0, 0.2); font-size: var(--fs); }
+.t.new { animation: grow 0.18s ease-out; }
+.t.merged { animation: pulse 0.2s ease-out; }
+@keyframes grow { from { transform: scale(0.3); } }
+@keyframes pulse { 50% { transform: scale(1.12); } }
+.arrows { display: none; }
+@media (prefers-reduced-motion: reduce) { .t.new, .t.merged { animation: none; } }
+</style>
+
+<div class="bar">
+  <div class="brand">Stack a Dollar <span>Merge</span></div>
+  <div class="side"><span>Score</span><b id="score">0</b></div>
+  <div class="goal"><b id="top">2</b><span>Top stack</span></div>
+  <div class="side r"><span>Best</span><b id="best">0</b></div>
+  <button class="new" id="newGame">New game</button>
+</div>
+<div class="stage" id="stage">
+  <div id="board" role="grid" aria-label="Board. Swipe or use arrow keys."></div>
+  <div id="msg" role="status" aria-live="polite">Swipe to slide. Matching coin stacks merge. Reach 2,048 coins!</div>
+</div>
+<div class="rack"><div class="tools" style="--n: 2">
+  <button class="tool gold" id="undo">Undo<small>Watch an ad</small></button>
+  <button class="tool" id="restart">Restart</button>
+</div></div>
+<div class="adbar"><div class="ad" id="adBanner">Ad space</div></div>
+<div class="veil" id="adBreak" hidden><div class="box">
+  <p id="adLabel">Ad break</p>
+  <div class="adfake">Ad shows here in the app</div>
+  <button class="go" id="adGo" disabled>Continue</button>
+</div></div>
+<div class="veil" id="over" hidden><div class="box">
+  <h2 id="overT">Out of moves</h2>
+  <p id="overP"></p>
+  <button class="go" id="rescue">Clear 3 small stacks<br><small>Watch an ad</small></button>
+  <button class="go alt" id="again">Play again</button>
+</div></div>
+
+<script>
+(function () {
+"use strict";
+var $ = function (id) { return document.getElementById(id); }, GAME = "merge";
+/* ---------- app bridge: the phone app connects these to AdMob and rewards ---------- */
+function post(o) { o.game = GAME; try { if (window.StackBridge && window.StackBridge.postMessage) { window.StackBridge.postMessage(JSON.stringify(o)); return true; } } catch (e) {} return false; }
+function showAd(kind, label, done) {
+  if (post({ type: kind })) { window[kind === "rewarded" ? "stackRewardEarned" : "stackAdClosed"] = function () { done(); }; return; }
+  var v = $("adBreak"), b = $("adGo"), n = kind === "rewarded" ? 5 : 3; $("adLabel").textContent = label || "Ad break";
+  v.hidden = false; b.disabled = true; b.textContent = "Continue in " + n;
+  var iv = setInterval(function () { n--; if (n > 0) b.textContent = "Continue in " + n; else { clearInterval(iv); b.disabled = false; b.textContent = "Continue"; b.focus(); } }, 1000);
+  b.onclick = function () { v.hidden = true; done(); };
+}
+if (post({ type: "banner" })) $("adBanner").classList.add("live");
+function store(k, v) { try { if (v === undefined) return localStorage.getItem("sad-" + GAME + "-" + k); localStorage.setItem("sad-" + GAME + "-" + k, v); } catch (e) { return null; } }
+
+var COL = { 2: ["#E8DFC2", "#2A1B00"], 4: ["#D8E8C4", "#17240C"], 8: ["#F4B321", "#2A1B00"], 16: ["#F28C28", "#2A1B00"], 32: ["#F2456B", "#FFFFFF"], 64: ["#C4162E", "#FFFFFF"], 128: ["#39B8F2", "#06263A"], 256: ["#1F5FD1", "#FFFFFF"], 512: ["#A77BF5", "#1A0E33"], 1024: ["#7A3FD6", "#FFFFFF"], 2048: ["#2EC4A0", "#06261F"] };
+var g, score, best = +store("best") || 0, prev = null, fresh = {}, merged = {}, won = false, games = 0;
+
+function empties() { var e = []; g.forEach(function (v, i) { if (!v) e.push(i); }); return e; }
+function spawn() { var e = empties(); if (!e.length) return; var i = e[Math.floor(Math.random() * e.length)]; g[i] = Math.random() < 0.9 ? 2 : 4; fresh[i] = 1; }
+function start() { g = new Array(16).fill(0); score = 0; prev = null; won = false; fresh = {}; merged = {}; spawn(); spawn(); $("over").hidden = true; say("Swipe to slide. Matching coin stacks merge. Reach 2,048 coins!"); render(); }
+function lineIdx(dir, k) {
+  var out = [];
+  for (var j = 0; j < 4; j++) {
+    if (dir === "left") out.push(k * 4 + j); else if (dir === "right") out.push(k * 4 + 3 - j);
+    else if (dir === "up") out.push(j * 4 + k); else out.push((3 - j) * 4 + k);
+  }
+  return out;
+}
+function slide(dir) {
+  var before = g.slice(), sBefore = score, moved = false; fresh = {}; merged = {};
+  for (var k = 0; k < 4; k++) {
+    var idx = lineIdx(dir, k), vals = idx.map(function (i) { return g[i]; }).filter(Boolean), out = [];
+    for (var j = 0; j < vals.length; j++) {
+      if (vals[j] === vals[j + 1]) { out.push(vals[j] * 2); score += vals[j] * 2; merged[idx[out.length - 1]] = 1; j++; }
+      else out.push(vals[j]);
+    }
+    while (out.length < 4) out.push(0);
+    idx.forEach(function (i, n) { if (g[i] !== out[n]) moved = true; g[i] = out[n]; });
+  }
+  if (!moved) return;
+  prev = { g: before, score: sBefore }; spawn();
+  if (score > best) { best = score; store("best", best); }
+  render();
+  var top = Math.max.apply(null, g);
+  if (top >= 2048 && !won) { won = true; post({ type: "levelComplete", level: 2048, score: score }); say("You stacked 2,048 coins! Keep going for more."); }
+  if (!canMove()) over();
+}
+function canMove() { if (empties().length) return true; for (var i = 0; i < 16; i++) { var r = i >> 2, c = i & 3; if (c < 3 && g[i] === g[i + 1]) return true; if (r < 3 && g[i] === g[i + 4]) return true; } return false; }
+function over() {
+  post({ type: "gameOver", score: score, top: Math.max.apply(null, g) });
+  $("overP").textContent = "Score " + score + ". Top stack " + Math.max.apply(null, g) + " coins.";
+  setTimeout(function () { $("over").hidden = false; $("rescue").focus(); }, 300);
+}
+
+function say(s) { $("msg").textContent = s; }
+function render() {
+  var b = $("board"), w = b.clientWidth || 300; b.textContent = "";
+  g.forEach(function (v, i) {
+    var el = document.createElement("div"); el.setAttribute("role", "gridcell");
+    if (v) {
+      var c = COL[v] || ["#17240C", "#F4B321"], label = String(v);
+      el.className = "t v" + (fresh[i] ? " new" : "") + (merged[i] ? " merged" : "");
+      el.style.setProperty("--c", c[0]); el.style.setProperty("--tc", c[1]);
+      el.style.setProperty("--fs", Math.round(w / 4 * (label.length <= 2 ? 0.4 : label.length === 3 ? 0.34 : 0.28)) + "px");
+      el.textContent = label; el.setAttribute("aria-label", label + " coins");
+    } else { el.className = "t"; el.setAttribute("aria-label", "empty"); }
+    b.appendChild(el);
+  });
+  fresh = {}; merged = {};
+  $("score").textContent = score; $("best").textContent = best; $("top").textContent = Math.max.apply(null, g);
+  $("undo").disabled = !prev;
+}
+
+document.addEventListener("keydown", function (e) { var d = { ArrowUp: "up", ArrowDown: "down", ArrowLeft: "left", ArrowRight: "right" }[e.key]; if (d && $("over").hidden && $("adBreak").hidden) { e.preventDefault(); slide(d); } });
+var sx = 0, sy = 0, tracking = false;
+$("stage").addEventListener("pointerdown", function (e) { sx = e.clientX; sy = e.clientY; tracking = true; });
+$("stage").addEventListener("pointerup", function (e) {
+  if (!tracking) return; tracking = false;
+  var dx = e.clientX - sx, dy = e.clientY - sy; if (Math.max(Math.abs(dx), Math.abs(dy)) < 24) return;
+  slide(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? "right" : "left") : (dy > 0 ? "down" : "up"));
+});
+$("undo").addEventListener("click", function () { if (!prev) return; showAd("rewarded", "Watch to undo your last move", function () { g = prev.g; score = prev.score; prev = null; $("over").hidden = true; render(); say("Move undone"); }); });
+$("rescue").addEventListener("click", function () {
+  $("over").hidden = true;
+  showAd("rewarded", "Watch to clear 3 small stacks", function () {
+    var idx = g.map(function (v, i) { return [v, i]; }).filter(function (x) { return x[0]; }).sort(function (a, b) { return a[0] - b[0]; }).slice(0, 3);
+    idx.forEach(function (x) { g[x[1]] = 0; }); prev = null; render(); say("3 small stacks cleared. Keep going!");
+  });
+});
+$("again").addEventListener("click", function () { $("over").hidden = true; games++; showAd("interstitial", "", start); });
+$("restart").addEventListener("click", start);
+$("newGame").addEventListener("click", start);
+window.addEventListener("resize", function () { render(); });
+start();
+})();
+</script>
+
+</body>
+</html>

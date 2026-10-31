@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{box-sizing:border-box}body{margin:0}img{max-width:100%}[hidden]{display:none!important}.adbar{display:none!important}</style>
+<script>
+/* Website preview: no ads here, so ad breaks and "watch an ad" buttons continue right away. */
+window.StackBridge = { postMessage: function (raw) {
+  var m = {}; try { m = JSON.parse(raw); } catch (e) {}
+  setTimeout(function () {
+    if (m.type === "interstitial" && window.stackAdClosed) window.stackAdClosed();
+    if (m.type === "rewarded" && window.stackRewardEarned) window.stackRewardEarned();
+  }, 0);
+} };
+</script>
+</head>
+<body>
+<title>Stack a Dollar Words</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&display=swap">
+<style>
+/* Layout: one screen. Level bar, the puzzle's word slots on the felt, a letter wheel on a wooden board to swipe across, ad banner space at the bottom. Same family look as the other Stack a Dollar games; one dark look by choice. */
+:root {
+  color-scheme: dark;
+  --felt: #5E9E1B; --felt-deep: #3F7A12; --bar: #17240C; --row: #213511; --ink: #FFFFFF; --muted: #D8E8C4;
+  --wood: #9A5A2E; --wood-deep: #6E3D1D; --gold: #F4B321; --gold-ink: #2A1B00;
+  --tile: #FBF8EE; --tile-edge: #B9AE93; --tile-ink: #18140F;
+  --font: 'Baloo 2', 'Trebuchet MS', 'Segoe UI', Arial, sans-serif;
+  --wheel: min(250px, 66vw, 34dvh);
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { background: var(--felt-deep); color: var(--ink); font-family: var(--font); font-size: 1rem; font-weight: 600; display: flex; flex-direction: column; overflow: hidden; -webkit-user-select: none; user-select: none; }
+button { font: inherit; color: inherit; cursor: pointer; border: none; background: none; padding: 0; }
+button:focus-visible { outline: 3px solid #FFFFFF; outline-offset: 2px; }
+
+.bar { padding-inline: 16px; padding-block: 8px; background: var(--bar); display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 2px 10px; }
+.brand { flex: 0 0 100%; text-align: center; font-weight: 800; font-size: 1.15rem; line-height: 1.1; color: var(--gold); }
+.brand span { color: var(--ink); }
+.side { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; line-height: 1.1; }
+.side.r { align-items: flex-end; }
+.side span { color: var(--muted); font-size: 0.85rem; }
+.side b { font-size: 1.7rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.goal { background: var(--gold); color: var(--gold-ink); border-radius: 10px; padding: 2px 16px; text-align: center; line-height: 1.05; }
+.goal b { display: block; font-size: 1.5rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.goal span { font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; }
+
+.stage { flex: 1 1 0; min-height: 0; overflow-y: auto; padding-inline: 16px; padding-block: 14px 8px; background: radial-gradient(ellipse at 50% 30%, var(--felt) 0%, var(--felt-deep) 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; }
+#slots { max-width: 460px; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 16px; }
+.word { display: flex; gap: 3px; }
+.word i { width: var(--b, 30px); height: var(--b, 30px); border-radius: 6px; background: var(--row); box-shadow: inset 0 2px 0 rgba(0, 0, 0, 0.3); display: flex; align-items: center; justify-content: center; font-style: normal; font-weight: 800; font-size: calc(var(--b, 30px) * 0.62); }
+.word i.on { background: var(--tile); color: var(--tile-ink); box-shadow: 0 2px 0 var(--tile-edge); }
+.word i.hint { background: var(--tile); color: #8B6A1E; box-shadow: 0 2px 0 var(--tile-edge); }
+.word.new i { animation: flip 0.35s ease-out both; }
+.word.new i:nth-child(2) { animation-delay: 0.04s; } .word.new i:nth-child(3) { animation-delay: 0.08s; } .word.new i:nth-child(4) { animation-delay: 0.12s; } .word.new i:nth-child(5) { animation-delay: 0.16s; } .word.new i:nth-child(6) { animation-delay: 0.2s; } .word.new i:nth-child(7) { animation-delay: 0.24s; }
+@keyframes flip { from { transform: rotateX(90deg); } }
+#msg { min-height: 1.4em; text-align: center; font-weight: 800; color: var(--gold); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7); }
+
+.rack { padding-inline: 16px; padding-block: 8px 12px; background: var(--wood); border-top: 6px solid var(--wood-deep); box-shadow: inset 0 10px 14px rgba(0, 0, 0, 0.25); display: flex; flex-direction: column; align-items: center; gap: 6px; }
+#preview { min-height: 2.2rem; display: flex; gap: 3px; justify-content: center; align-items: center; }
+#preview i { font-style: normal; font-weight: 800; font-size: 1.3rem; background: var(--gold); color: var(--gold-ink); border-radius: 6px; padding: 0 8px; }
+.wheelrow { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px; width: 100%; max-width: 440px; }
+.side-tools { display: flex; flex-direction: column; gap: 8px; }
+.side-tools.r { align-items: flex-end; }
+.tool { min-height: 44px; min-width: 64px; border-radius: 10px; background: var(--bar); font-weight: 800; line-height: 1.05; padding: 4px 8px; }
+.tool small { display: block; font-size: 0.7rem; color: var(--muted); font-weight: 600; }
+.tool.gold { background: var(--gold); color: var(--gold-ink); }
+.tool.gold small { color: var(--gold-ink); }
+.tool[hidden] { display: none; }
+#wheel { position: relative; width: var(--wheel); height: var(--wheel); border-radius: 50%; background: rgba(0, 0, 0, 0.22); box-shadow: inset 0 4px 10px rgba(0, 0, 0, 0.35); touch-action: none; }
+#wheel svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+#wheel line, #wheel polyline { stroke: var(--gold); stroke-width: 8; stroke-linecap: round; stroke-linejoin: round; fill: none; }
+.ltr { position: absolute; width: 22%; height: 22%; transform: translate(-50%, -50%); border-radius: 50%; background: var(--tile); color: var(--tile-ink); box-shadow: 0 3px 0 var(--tile-edge); font-weight: 800; font-size: calc(var(--wheel) * 0.11); display: flex; align-items: center; justify-content: center; }
+.ltr.on { background: var(--gold); color: var(--gold-ink); box-shadow: 0 3px 0 #A87700; }
+
+.adbar { background: var(--bar); padding-inline: 16px; padding-block: 6px; }
+.ad { width: min(320px, 100%); height: 50px; margin-inline: auto; display: flex; align-items: center; justify-content: center; border: 1px dashed #4C6A2C; border-radius: 6px; color: #8FA878; font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; }
+.ad.live { border-color: transparent; color: transparent; }
+
+.veil { position: fixed; inset: 0; z-index: 10; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(8, 20, 2, 0.78); }
+.box { background: var(--bar); border: 3px solid var(--gold); border-radius: 14px; padding: 18px; width: 100%; max-width: 340px; display: flex; flex-direction: column; gap: 10px; text-align: center; }
+.box h2 { margin: 0; font-size: 1.5rem; font-weight: 800; color: var(--gold); line-height: 1.1; text-wrap: balance; }
+.box p { margin: 0; color: var(--muted); }
+.go { background: var(--gold); color: var(--gold-ink); border-radius: 10px; min-height: 48px; font-weight: 800; font-size: 1.1rem; }
+.go:disabled { opacity: 0.55; cursor: default; }
+.adfake { height: 180px; border: 1px dashed #4C6A2C; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #8FA878; letter-spacing: 0.08em; text-transform: uppercase; font-size: 0.85rem; }
+@media (prefers-reduced-motion: reduce) { .word.new i { animation: none; } }
+</style>
+
+<div class="bar">
+  <div class="brand">Stack a Dollar <span>Words</span></div>
+  <div class="side"><span>Found</span><b id="found">0/0</b></div>
+  <div class="goal"><b id="level">1</b><span>Level</span></div>
+  <div class="side r"><span>Bonus words</span><b id="bonus">0</b></div>
+</div>
+<div class="stage">
+  <div id="slots" aria-label="Words to find"></div>
+  <div id="msg" role="status" aria-live="polite">Swipe across the letters to spell a word</div>
+</div>
+<div class="rack">
+  <div id="preview" aria-hidden="true"></div>
+  <div class="wheelrow">
+    <div class="side-tools">
+      <button class="tool" id="shuffle">Shuffle</button>
+      <button class="tool" id="clear" hidden>Clear</button>
+    </div>
+    <div id="wheel" aria-label="Letter wheel"><svg aria-hidden="true"><polyline id="line"></polyline><line id="tail"></line></svg></div>
+    <div class="side-tools r">
+      <button class="tool gold" id="hint">Hint<small>Watch an ad</small></button>
+      <button class="tool" id="enter" hidden>Enter</button>
+    </div>
+  </div>
+</div>
+<div class="adbar"><div class="ad" id="adBanner">Ad space</div></div>
+
+<div class="veil" id="won" hidden><div class="box">
+  <h2 id="wonT">Level 1 done!</h2>
+  <p id="wonP"></p>
+  <button class="go" id="next">Next level</button>
+</div></div>
+<div class="veil" id="adBreak" hidden><div class="box">
+  <p id="adLabel">Ad break</p>
+  <div class="adfake">Ad shows here in the app</div>
+  <button class="go" id="adGo" disabled>Continue</button>
+</div></div>
+
+<script>
+(function () {
+"use strict";
+var $ = function (id) { return document.getElementById(id); };
+var LEVELS = [
+  { l: "ART", w: ["ART", "RAT", "TAR"], b: [] },
+  { l: "OPST", w: ["TOP", "POT", "SPOT", "STOP", "POST", "POTS"], b: ["OPT", "OPTS", "TOPS"] },
+  { l: "EATS", w: ["EAT", "SEA", "TEA", "SAT", "EAST", "SEAT"], b: ["ATE", "EATS", "TEAS", "SATE", "ETA"] },
+  { l: "DGOS", w: ["DOG", "GOD", "DOGS", "GODS"], b: ["SOD"] },
+  { l: "RAIN", w: ["RAIN", "AIR", "RAN"], b: [] },
+  { l: "STAR", w: ["STAR", "RATS", "ARTS", "ART", "RAT", "SAT"], b: ["TSAR", "TARS", "TAR"] },
+  { l: "CASH", w: ["CASH", "ASH", "HAS"], b: ["SAC"] },
+  { l: "MONEY", w: ["MONEY", "OMEN", "ONE", "MEN", "YEN"], b: ["EON"] },
+  { l: "COINS", w: ["COINS", "ICONS", "COIN", "ICON", "ION", "SON", "SIN"], b: ["SONIC", "SCION", "CONS", "CON", "IONS"] },
+  { l: "PLANE", w: ["PLANE", "PANEL", "PLAN", "LANE", "LEAN", "PANE", "NAP", "PAN"], b: ["PEA", "PAL", "LAP", "APE", "PEAL", "PALE", "PLEA", "LEAP", "PEN", "NAPE", "ALE"] },
+  { l: "WINER", w: ["WINE", "WIRE", "WREN", "REIN", "WIN", "NEW"], b: ["WEIR"] },
+  { l: "GREAT", w: ["GREAT", "GRATE", "GATE", "GEAR", "RAGE", "RATE", "TEAR", "TAG"], b: ["RAT", "TAR", "ART", "EAT", "TEA", "ATE", "ERA", "EAR", "ARE", "RAG", "AGE"] },
+  { l: "PRIZE", w: ["PRIZE", "RIPE", "PIER", "PIE", "RIP", "ZIP"], b: ["PER", "REP"] },
+  { l: "SPEND", w: ["SPEND", "SEND", "ENDS", "PENS", "PEN", "END", "DEN"], b: ["DENS"] },
+  { l: "STONE", w: ["STONE", "NOTES", "TONES", "NOTE", "TONE", "NEST", "SENT", "ONE"], b: ["ONSET", "ONES", "TENS", "NETS", "NOSE", "TONS", "SET", "TEN", "NET", "NOT", "TON", "SON", "EONS", "TOE", "TOES"] },
+  { l: "LUCKY", w: ["LUCKY", "LUCK", "YUCK"], b: [] },
+  { l: "BREAD", w: ["BREAD", "BEARD", "BEAD", "BEAR", "DEAR", "READ", "BRED", "BAD", "BED", "RED"], b: ["BARED", "BARE", "DARE", "BRA", "BAR", "ERA", "EAR", "ARE", "DAB", "ABED", "DRAB"] },
+  { l: "TRAIN", w: ["TRAIN", "RAIN", "RANT", "AIR", "ANT", "ART", "RAT", "TIN"], b: ["TAN", "TAR", "NIT", "RAN"] },
+  { l: "WEALTH", w: ["WEALTH", "WHEAT", "WHAT", "HEAT", "HATE", "HALT", "LATE", "TALE"], b: ["THAW", "WHALE", "HEAL", "HALE", "TEAL", "WHET", "WET", "EAT", "TEA", "ATE", "HAT", "LET", "LAW", "AWL", "AWE", "HEW", "ALE"] },
+  { l: "DOLLARS", w: ["DOLLARS", "DOLLAR", "DOLLS", "ROLLS", "DOLL", "ROLL", "LOAD", "ROAD"], b: ["LORD", "LORDS", "ORAL", "SOLAR", "SODA", "LOADS", "ROADS", "ALL", "OAR", "OARS", "SOAR", "ROD", "RODS", "LAD", "LADS", "SAD"] },
+  { l: "HOUSE", w: ["HOUSE", "HOSE", "SHOE", "USE", "HUE", "SUE", "HOE"], b: ["HUES", "HOES"] },
+  { l: "FRIEND", w: ["FRIEND", "FRIED", "DINER", "FIRE", "FIND", "RIDE", "FERN", "DINE"], b: ["FINDER", "FINED", "FINE", "NERD", "REIN", "RIND", "DIRE", "RED", "FED", "FIN", "FIR", "DEN", "END", "IRE", "RID", "DIN", "DIE"] },
+  { l: "SPORT", w: ["SPORT", "PORT", "SORT", "STOP", "SPOT", "POST", "TOP", "ROT"], b: ["PORTS", "STROP", "TOPS", "POTS", "OPTS", "ROTS", "OPT", "PRO", "PROS"] },
+  { l: "CHAIR", w: ["CHAIR", "HAIR", "ARCH", "RICH", "AIR"], b: ["CHAR"] },
+  { l: "GARDEN", w: ["GARDEN", "DANGER", "GRADE", "RANGE", "ANGER", "GRAND", "DEAR", "DRAG"], b: ["RANGED", "GANDER", "RAGED", "READ", "DARE", "GEAR", "RAGE", "NERD", "EARN", "NEAR", "DEAN", "RAN", "RAG", "RED", "AND", "END", "DEN", "ERA", "EAR", "ARE", "AGE", "NAG"] },
+  { l: "PLANET", w: ["PLANET", "PLANT", "PLANE", "PANEL", "PLATE", "PETAL", "PANT", "LANE"], b: ["LEAPT", "PLAN", "LEAN", "NEAT", "ANTE", "PEAT", "TAPE", "PALE", "PEAL", "LEAP", "PLEA", "LATE", "TALE", "TEAL", "PELT", "LENT", "ANT", "NET", "PEN", "TEN", "PAN", "PAT", "TAP", "PET", "APT", "ATE", "EAT", "TEA", "ALE", "NAP"] },
+  { l: "WATER", w: ["WATER", "WEAR", "TEAR", "RATE", "WART", "WAR", "ATE", "EAT"], b: ["WARE", "AWE", "WET", "RAW", "TAR", "RAT", "ART", "TEA", "ERA", "EAR", "ARE"] },
+  { l: "SILVER", w: ["SILVER", "SLIVER", "LIVER", "LIVES", "VEIL", "LIVE", "EVIL", "VILE"], b: ["LIVERS", "EVILS", "VEILS", "RISE", "SIRE", "LIES", "ISLE", "LIE", "SIR"] },
+  { l: "BASKET", w: ["BASKET", "BEAST", "SKATE", "STEAK", "BAKE", "BEAT", "BEST", "TASK"], b: ["BAKES", "BASTE", "STAKE", "TAKES", "BETS", "SAKE", "TAKE", "BATS", "STAB", "TABS", "EAST", "SEAT", "EATS", "TEAS", "BET", "SAT", "SEA", "TEA", "EAT", "ATE", "ASK", "TAB", "BAT"] },
+  { l: "CASTLE", w: ["CASTLE", "SCALE", "STEAL", "SLATE", "LEAST", "LACE", "CAST", "SALT"], b: ["CLEATS", "TALES", "CLEAT", "CATS", "ACTS", "LAST", "LATE", "TALE", "TEAL", "SEAL", "SALE", "EAST", "SEAT", "EATS", "TEAS", "LETS", "CAT", "ACT", "SET", "SAT", "SEA", "TEA", "EAT", "ATE", "ALE", "LET"] },
+  { l: "MARKET", w: ["MARKET", "MAKER", "TAKER", "MAKE", "TAKE", "MEAT", "MARK", "TERM"], b: ["RATE", "TEAR", "MATE", "TEAM", "TRAM", "MART", "TAME", "MARE", "REAM", "RAKE", "TREK", "ARM", "ART", "RAT", "MAT", "TAR", "EAT", "TEA", "ATE", "ERA", "EAR", "ARE", "MET"] },
+  { l: "BRIDGE", w: ["BRIDGE", "BRIDE", "RIDGE", "BIRD", "RIDE", "GRID", "BRED"], b: ["DIRGE", "DIRE", "BIDE", "BIG", "BID", "BED", "RED", "RIG", "RID", "DIG", "DIE", "BEG", "IRE"] },
+  { l: "FLOWER", w: ["FLOWER", "LOWER", "FLOW", "WOLF", "ROLE", "OWL", "LOW", "ROW"], b: ["FOWLER", "FLOE", "LORE", "FLEW", "FOWL", "WORE", "FORE", "FEW", "FOR", "ORE", "ROE", "OWE", "FOE", "ELF"] },
+  { l: "THUNDER", w: ["THUNDER", "HUNTER", "HUNTED", "UNDER", "TUNED", "HURT", "HUNT", "TEND"], b: ["NUDE", "TUNE", "DUNE", "RUDE", "DUET", "TURN", "RENT", "DENT", "HEN", "HUT", "NUT", "RUN", "RUT", "DEN", "END", "TEN", "NET", "HER", "THE", "DUE", "URN"] },
+  { l: "PICTURE", w: ["PICTURE", "PRICE", "CURE", "CUTE", "PURE", "TRIP", "EPIC", "RICE"], b: ["CUTER", "ERUPT", "TRUCE", "PIER", "RIPE", "TIRE", "TIER", "RITE", "CITE", "PUCE", "PUT", "CUP", "CUT", "PIE", "TIP", "PIT", "RIP", "ICE", "IRE", "PET", "RUT", "RUE", "CUE"] },
+  { l: "SUMMER", w: ["SUMMER", "MUSE", "SURE", "USER", "RUSE", "SUM", "RUM"], b: ["EMUS", "MUM", "MUMS", "EMU", "SUE", "USE", "RUE", "RUES"] },
+  { l: "WINTER", w: ["WINTER", "TWINE", "WRITE", "WIRE", "WINE", "TIRE", "RENT", "TWIN"], b: ["WREN", "TERN", "REIN", "TINE", "RITE", "TIER", "WRIT", "WEIR", "WENT", "NEWT", "INERT", "INTER", "WIN", "WIT", "NEW", "NET", "TEN", "TIN", "WET", "IRE", "NIT"] },
+  { l: "CANDLE", w: ["CANDLE", "CLEAN", "LANCE", "DANCE", "LACED", "DEAL", "LEAD", "LANE"], b: ["LANCED", "LEAN", "CANE", "ACNE", "LACE", "CLAD", "LAND", "DEAN", "ACED", "CLAN", "AND", "END", "DEN", "CAN", "LAD", "LED", "ALE", "ACE"] },
+  { l: "POCKET", w: ["POCKET", "POKE", "PECK", "COPE", "POET", "KEPT"], b: ["COKE", "TOE", "POT", "TOP", "COT", "OPT", "PET"] },
+  { l: "JACKPOT", w: ["JACKPOT", "JACK", "TACO", "COAT", "PACK", "TACK", "OPT", "TOP"], b: ["JOCK", "ATOP", "COT", "CAT", "ACT", "CAP", "PAT", "TAP", "OAT", "APT", "POT"] },
+  { l: "SAVINGS", w: ["SAVINGS", "SAVING", "SIGNS", "SINGS", "VAIN", "SIGN", "SING", "GAIN"], b: ["SAGS", "SANG", "SNAG", "SNAGS", "NAGS", "VANS", "VIA", "SIN", "SAG", "NAG", "GIN", "GAS", "VAN", "SINS", "GINS"] },
+  { l: "BUDGET", w: ["BUDGET", "BUDGE", "DEBUT", "BUG", "TUB", "BUD", "BET", "GUT"], b: ["TUBED", "DUET", "BED", "BEG", "DUG", "TUG", "DUE", "GET"] },
+  { l: "PROFIT", w: ["PROFIT", "FORT", "RIOT", "TRIP", "PORT", "TRIO"], b: ["OPT", "TOP", "POT", "FIT", "FOR", "FIR", "RIP", "TIP", "PIT", "ROT", "OFT"] },
+  { l: "DIAMOND", w: ["DIAMOND", "DOMAIN", "NOMAD", "AMID", "MAID", "MIND", "MAIN", "MOAN"], b: ["MONAD", "AMINO", "ADD", "DAD", "DID", "MAD", "MID", "AND", "AIM", "AID", "NOD", "DON", "ION", "MAN", "MOD", "DIN", "ODD"] },
+  { l: "WALLET", w: ["WALLET", "WALL", "TALL", "TELL", "WELL", "LATE", "TALE", "TEAL"], b: ["WET", "AWE", "LAW", "AWL", "ATE", "EAT", "TEA", "LET", "ALL"] },
+  { l: "CREDIT", w: ["CREDIT", "DIRECT", "CITED", "CIDER", "EDICT", "RICE", "TIRE", "TIDE"], b: ["DICE", "CITE", "RIDE", "DIRE", "EDIT", "TIED", "DIET", "TIER", "RITE", "TRIED", "DIRT", "CRIED", "RED", "RID", "ICE", "IRE"] },
+  { l: "SHOPPER", w: ["SHOPPER", "HOPPER", "HOPES", "POSER", "PROSE", "ROPES", "SHOP", "HOPE"], b: ["SHOE", "HOSE", "HOPS", "POSH", "PROP", "PROPS", "HERO", "ROPE", "PORE", "REPO", "PEP", "PEPS", "HOP", "ORE", "ROE", "HER", "HOE", "POPE", "POPES"] },
+  { l: "HUNDRED", w: ["HUNDRED", "UNDER", "NUDE", "DUNE", "RUDE", "HERD", "NERD", "DUDE"], b: ["HUE", "HEN", "DEN", "END", "RED", "DUE", "RUN", "URN", "HER", "HUED"] },
+  { l: "FORTUNE", w: ["FORTUNE", "FRONT", "ROUTE", "TENOR", "TUNE", "TURN", "TOUR", "FONT"], b: ["TUNER", "FORTE", "TONER", "OUTER", "NOTE", "TONE", "FOUR", "FORT", "FUN", "FUR", "NUT", "NOT", "TON", "TEN", "NET", "ONE", "ORE", "ROE", "TOE", "RUE", "RUT", "OUR", "FOE", "FRET", "FERN", "RENT", "TERN", "UNTO"] },
+  { l: "LOTTERY", w: ["LOTTERY", "OTTER", "TOTE", "ROTE", "TORE", "ROLE", "LORE", "TRY"], b: ["YORE", "LYRE", "YET", "LOT", "LET", "TOT", "TOE", "ROT", "ORE", "ROE", "RYE", "LYE", "TOY"] }
+];
+var level = 1, lv, letters, words, found, reveal, bonusFound, bonusTotal = 0, chain = [], drawing = false, moved = false, lastNew = "";
+try { level = Math.max(1, +localStorage.getItem("sad-words-level") || 1); bonusTotal = +localStorage.getItem("sad-words-bonus") || 0; } catch (e) {}
+
+/* ---------- app bridge: the phone app connects these to AdMob and rewards ---------- */
+function post(o) { try { if (window.StackBridge && window.StackBridge.postMessage) { window.StackBridge.postMessage(JSON.stringify(o)); return true; } } catch (e) {} return false; }
+function showAd(kind, done) {
+  if (post({ type: kind, game: "words" })) { window[kind === "rewarded" ? "stackRewardEarned" : "stackAdClosed"] = function () { done(); }; return; }
+  var v = $("adBreak"), b = $("adGo"), n = kind === "rewarded" ? 5 : 3; $("adLabel").textContent = kind === "rewarded" ? "Watch to reveal a letter" : "Ad break";
+  v.hidden = false; b.disabled = true; b.textContent = "Continue in " + n;
+  var iv = setInterval(function () { n--; if (n > 0) b.textContent = "Continue in " + n; else { clearInterval(iv); b.disabled = false; b.textContent = "Continue"; b.focus(); } }, 1000);
+  b.onclick = function () { v.hidden = true; done(); };
+}
+if (post({ type: "banner", game: "words" })) $("adBanner").classList.add("live");
+
+/* ---------- level ---------- */
+function shuffle(a) { for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), x = a[i]; a[i] = a[j]; a[j] = x; } return a; }
+function load() {
+  lv = LEVELS[(level - 1) % LEVELS.length];
+  letters = shuffle(lv.l.split(""));
+  words = lv.w.slice().sort(function (a, b) { return a.length - b.length || (a < b ? -1 : 1); });
+  found = {}; reveal = {}; bonusFound = {}; chain = []; lastNew = "";
+  $("won").hidden = true; say("Swipe across the letters to spell a word"); buildWheel(); render();
+}
+function submit() {
+  var w = chain.map(function (i) { return letters[i]; }).join(""); chain = []; setTap(false);
+  if (w.length < 3) { if (w.length) say("Words need 3 or more letters"); return render(); }
+  if (words.indexOf(w) >= 0) {
+    if (found[w]) say(w + " is already found");
+    else { found[w] = true; lastNew = w; say(w + "!"); }
+  } else if (lv.b.indexOf(w) >= 0) {
+    if (bonusFound[w]) say(w + " is already counted");
+    else { bonusFound[w] = true; bonusTotal++; try { localStorage.setItem("sad-words-bonus", bonusTotal); } catch (e) {} post({ type: "bonusWord", game: "words", word: w }); say("Bonus word: " + w + "!"); }
+  } else say(w + " isn't in this puzzle");
+  render();
+  if (words.every(function (x) { return found[x]; })) win();
+}
+function win() {
+  post({ type: "levelComplete", game: "words", level: level });
+  $("wonT").textContent = "Level " + level + " done!";
+  var nb = Object.keys(bonusFound).length;
+  $("wonP").textContent = "You found all " + words.length + " words" + (nb ? " and " + nb + " bonus word" + (nb > 1 ? "s" : "") : "") + ".";
+  level++; try { localStorage.setItem("sad-words-level", level); } catch (e) {}
+  setTimeout(function () { $("won").hidden = false; $("next").focus(); }, 700);
+}
+
+/* ---------- drawing ---------- */
+function say(s) { $("msg").textContent = s; }
+function render() {
+  var box = $("slots"), n = words.filter(function (w) { return found[w]; }).length, longest = words[words.length - 1].length;
+  var b = Math.max(22, Math.min(34, Math.floor((Math.min(window.innerWidth, 460) - 40) / (longest * 2 + 2))));
+  box.style.setProperty("--b", b + "px"); box.textContent = "";
+  words.forEach(function (w) {
+    var row = document.createElement("div"); row.className = "word" + (w === lastNew ? " new" : "");
+    row.setAttribute("aria-label", found[w] ? w : w.length + " letter word" + (reveal[w] ? ", starts with " + w.slice(0, reveal[w]) : ""));
+    w.split("").forEach(function (ch, k) {
+      var i = document.createElement("i");
+      if (found[w]) { i.className = "on"; i.textContent = ch; }
+      else if (k < (reveal[w] || 0)) { i.className = "hint"; i.textContent = ch; }
+      row.appendChild(i);
+    });
+    box.appendChild(row);
+  });
+  lastNew = "";
+  $("found").textContent = n + "/" + words.length; $("level").textContent = level; $("bonus").textContent = bonusTotal;
+  drawChain();
+}
+function buildWheel() {
+  var wh = $("wheel"); Array.prototype.slice.call(wh.querySelectorAll(".ltr")).forEach(function (e) { e.remove(); });
+  var n = letters.length, r = n > 6 ? 37 : 34;
+  letters.forEach(function (ch, i) {
+    var a = -Math.PI / 2 + i * 2 * Math.PI / n, b = document.createElement("button");
+    b.className = "ltr"; b.textContent = ch; b.dataset.i = i; b.style.left = (50 + r * Math.cos(a)) + "%"; b.style.top = (50 + r * Math.sin(a)) + "%";
+    b.setAttribute("aria-label", "Letter " + ch);
+    b.addEventListener("click", function (e) { if (e.detail === 0) tapLetter(i); });
+    wh.appendChild(b);
+  });
+}
+function center(i) { var el = $("wheel").querySelector('[data-i="' + i + '"]'), w = $("wheel").getBoundingClientRect(), r = el.getBoundingClientRect(); return [r.left + r.width / 2 - w.left, r.top + r.height / 2 - w.top]; }
+function drawChain(px, py) {
+  Array.prototype.forEach.call($("wheel").querySelectorAll(".ltr"), function (el) { el.classList.toggle("on", chain.indexOf(+el.dataset.i) >= 0); });
+  $("line").setAttribute("points", chain.map(function (i) { return center(i).join(","); }).join(" "));
+  var t = $("tail");
+  if (drawing && chain.length && px !== undefined) { var c = center(chain[chain.length - 1]); t.setAttribute("x1", c[0]); t.setAttribute("y1", c[1]); t.setAttribute("x2", px); t.setAttribute("y2", py); t.style.display = ""; }
+  else t.style.display = "none";
+  var p = $("preview"); p.textContent = "";
+  if (chain.length) { var i = document.createElement("i"); i.textContent = chain.map(function (k) { return letters[k]; }).join(""); p.appendChild(i); }
+}
+function setTap(on) { $("enter").hidden = !on; $("clear").hidden = !on; }
+function tapLetter(i) { if (chain.indexOf(i) < 0) chain.push(i); setTap(true); drawChain(); }
+
+/* ---------- swipe ---------- */
+function letterAt(x, y) { var el = document.elementFromPoint(x, y); el = el && el.closest ? el.closest(".ltr") : null; return el ? +el.dataset.i : -1; }
+var wh = $("wheel");
+wh.addEventListener("pointerdown", function (e) {
+  var i = letterAt(e.clientX, e.clientY); if (i < 0) return;
+  e.preventDefault();
+  if (chain.length && !$("enter").hidden) { tapLetter(i); return; }
+  chain = [i]; drawing = true; moved = false;
+  try { wh.setPointerCapture(e.pointerId); } catch (x) {}
+  drawChain();
+});
+wh.addEventListener("pointermove", function (e) {
+  if (!drawing) return;
+  var i = letterAt(e.clientX, e.clientY);
+  if (i >= 0 && chain.indexOf(i) < 0) { chain.push(i); moved = true; }
+  else if (i >= 0 && chain.length > 1 && chain[chain.length - 2] === i) chain.pop();
+  var w = wh.getBoundingClientRect(); drawChain(e.clientX - w.left, e.clientY - w.top);
+});
+function up() {
+  if (!drawing) return; drawing = false;
+  if (moved && chain.length > 1) submit(); else { setTap(true); drawChain(); say("Tap more letters, then Enter"); }
+}
+wh.addEventListener("pointerup", up); wh.addEventListener("pointercancel", up);
+
+$("enter").addEventListener("click", submit);
+$("clear").addEventListener("click", function () { chain = []; setTap(false); drawChain(); say(""); });
+$("shuffle").addEventListener("click", function () { chain = []; setTap(false); letters = shuffle(letters); buildWheel(); drawChain(); });
+$("hint").addEventListener("click", function () {
+  var left = words.filter(function (w) { return !found[w]; }); if (!left.length) return;
+  showAd("rewarded", function () {
+    var w = left.sort(function (a, b) { return (reveal[a] || 0) / a.length - (reveal[b] || 0) / b.length; })[0];
+    reveal[w] = (reveal[w] || 0) + 1;
+    if (reveal[w] >= w.length) { found[w] = true; lastNew = w; }
+    say("A letter is revealed"); render();
+    if (words.every(function (x) { return found[x]; })) win();
+  });
+});
+$("next").addEventListener("click", function () { $("won").hidden = true; if ((level - 1) % 2 === 0) showAd("interstitial", load); else load(); });
+window.addEventListener("resize", function () { render(); });
+load();
+})();
+</script>
+
+</body>
+</html>

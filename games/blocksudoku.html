@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{box-sizing:border-box}body{margin:0}img{max-width:100%}[hidden]{display:none!important}.adbar{display:none!important}</style>
+<script>
+/* Website preview: no ads here, so ad breaks and "watch an ad" buttons continue right away. */
+window.StackBridge = { postMessage: function (raw) {
+  var m = {}; try { m = JSON.parse(raw); } catch (e) {}
+  setTimeout(function () {
+    if (m.type === "interstitial" && window.stackAdClosed) window.stackAdClosed();
+    if (m.type === "rewarded" && window.stackRewardEarned) window.stackRewardEarned();
+  }, 0);
+} };
+</script>
+</head>
+<body>
+<title>Stack a Dollar Block Sudoku</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&display=swap">
+<style>
+/* Layout: one screen. Score bar, 9x9 board of nine boxes on felt, a wooden tray of three pieces, ad banner space at the bottom. Same family look as Stack a Dollar Spades and Dominoes; one dark look by choice. */
+:root {
+  color-scheme: dark;
+  --felt: #5E9E1B; --felt-deep: #3F7A12; --bar: #17240C; --well: #24380F; --ink: #FFFFFF; --muted: #D8E8C4;
+  --wood: #9A5A2E; --wood-deep: #6E3D1D; --gold: #F4B321; --gold-ink: #2A1B00;
+  --p1: #F4B321; --p2: #39B8F2; --p3: #F2456B; --p4: #F28C28; --p5: #A77BF5; --p6: #2EC4A0;
+  --font: 'Baloo 2', 'Trebuchet MS', 'Segoe UI', Arial, sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { background: var(--felt-deep); color: var(--ink); font-family: var(--font); font-size: 1rem; font-weight: 600; display: flex; flex-direction: column; overflow: hidden; -webkit-user-select: none; user-select: none; }
+button { font: inherit; color: inherit; cursor: pointer; border: none; background: none; padding: 0; }
+button:focus-visible { outline: 3px solid #FFFFFF; outline-offset: 2px; }
+
+.bar { padding-inline: 16px; padding-block: 8px; background: var(--bar); display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 2px 10px; }
+.brand { flex: 0 0 100%; text-align: center; font-weight: 800; font-size: 1.15rem; line-height: 1.1; color: var(--gold); }
+.brand span { color: var(--ink); }
+.side { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; line-height: 1.1; }
+.side.r { align-items: flex-end; }
+.side span { color: var(--muted); font-size: 0.85rem; }
+.side b { font-size: 1.7rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.goal { background: var(--gold); color: var(--gold-ink); border-radius: 10px; padding: 2px 16px; text-align: center; line-height: 1.05; }
+.goal b { display: block; font-size: 1.5rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.goal span { font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; }
+.new { border: 2px solid #4C6A2C; border-radius: 8px; min-height: 40px; padding: 0 10px; font-size: 0.9rem; }
+
+.stage { position: relative; flex: 1 1 0; min-height: 0; padding-inline: 16px; padding-block: 12px 8px; background: radial-gradient(ellipse at 50% 40%, var(--felt) 0%, var(--felt-deep) 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
+.board { width: min(100%, 440px, calc(100dvh - 360px)); min-width: 220px; aspect-ratio: 1; display: grid; grid-template: repeat(9, 1fr) / repeat(9, 1fr); gap: 3px; padding: 6px; background: var(--bar); border-radius: 12px; box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35); touch-action: none; }
+.cell { border-radius: 5px; background: var(--well); }
+.cell[data-alt] { background: #31501A; }
+.blk, .cell.on, .cell.ghost { background: var(--c); box-shadow: inset 0 -4px 0 rgba(0, 0, 0, 0.22), inset 0 3px 0 rgba(255, 255, 255, 0.3); }
+.cell.ghost { opacity: 0.45; }
+.cell.clear { box-shadow: 0 0 0 2px var(--ink), inset 0 -4px 0 rgba(0, 0, 0, 0.22); }
+.cell.boom { animation: boom 0.32s ease-out; }
+@keyframes boom { from { background: #FFFFFF; transform: scale(1.12); } }
+#msg { min-height: 1.4em; text-align: center; font-size: 1rem; font-weight: 800; color: var(--gold); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7); }
+
+.rack { padding-inline: 16px; padding-block: 12px 14px; background: var(--wood); border-top: 6px solid var(--wood-deep); box-shadow: inset 0 10px 14px rgba(0, 0, 0, 0.25); }
+#tray { max-width: 440px; margin-inline: auto; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; height: 104px; }
+.slot { display: flex; align-items: center; justify-content: center; border-radius: 10px; touch-action: none; min-height: 44px; }
+.slot.sel { background: rgba(0, 0, 0, 0.22); box-shadow: 0 0 0 3px var(--gold); }
+.slot.dead .piece { opacity: 0.35; }
+.slot.lift .piece { opacity: 0.15; }
+.piece { display: grid; gap: 2px; pointer-events: none; }
+.piece i { width: var(--s); height: var(--s); border-radius: 3px; }
+.float { position: fixed; left: 0; top: 0; display: grid; pointer-events: none; z-index: 5; filter: drop-shadow(0 8px 10px rgba(0, 0, 0, 0.45)); }
+.float i { border-radius: 5px; }
+
+.adbar { background: var(--bar); padding-inline: 16px; padding-block: 6px; }
+.ad { width: min(320px, 100%); height: 50px; margin-inline: auto; display: flex; align-items: center; justify-content: center; border: 1px dashed #4C6A2C; border-radius: 6px; color: #8FA878; font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; }
+.ad.live { border-color: transparent; color: transparent; }
+
+.veil { position: fixed; inset: 0; z-index: 10; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(8, 20, 2, 0.78); }
+.box { background: var(--bar); border: 3px solid var(--gold); border-radius: 14px; padding: 18px; width: 100%; max-width: 340px; display: flex; flex-direction: column; gap: 10px; text-align: center; }
+.box h2 { margin: 0; font-size: 1.5rem; font-weight: 800; color: var(--gold); line-height: 1.1; text-wrap: balance; }
+.box p { margin: 0; color: var(--muted); }
+.box .big { font-size: 2.6rem; font-weight: 800; color: var(--ink); line-height: 1; font-variant-numeric: tabular-nums; }
+.go { background: var(--gold); color: var(--gold-ink); border-radius: 10px; min-height: 48px; font-weight: 800; font-size: 1.1rem; }
+.go:disabled { opacity: 0.55; cursor: default; }
+.adfake { height: 180px; border: 1px dashed #4C6A2C; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #8FA878; letter-spacing: 0.08em; text-transform: uppercase; font-size: 0.85rem; }
+@media (prefers-reduced-motion: reduce) { .cell.boom { animation: none; } }
+</style>
+
+<div class="bar">
+  <div class="brand">Stack a Dollar <span>Block Sudoku</span></div>
+  <div class="side"><span>Score</span><b id="score">0</b></div>
+  <div class="goal"><b id="lines">0</b><span>Clears</span></div>
+  <div class="side r"><span>Best</span><b id="best">0</b></div>
+  <button class="new" id="newGame">New game</button>
+</div>
+<div class="stage">
+  <div class="board" id="board" role="grid" aria-label="Board, 9 by 9"></div>
+  <div id="msg" role="status" aria-live="polite">Fill a row, column or 3x3 box to clear it</div>
+</div>
+<div class="rack"><div id="tray" aria-label="Your pieces"></div></div>
+<div class="adbar"><div class="ad" id="adBanner">Ad space</div></div>
+
+<div class="veil" id="over" hidden><div class="box">
+  <h2>Out of room</h2>
+  <p>Final score</p>
+  <div class="big" id="overScore">0</div>
+  <p id="overNote"></p>
+  <button class="go" id="again">Play again</button>
+</div></div>
+<div class="veil" id="adBreak" hidden><div class="box">
+  <p>Ad break</p>
+  <div class="adfake">Ad shows here in the app</div>
+  <button class="go" id="adGo" disabled>Continue</button>
+</div></div>
+
+<script>
+(function () {
+"use strict";
+var $ = function (id) { return document.getElementById(id); };
+var N = 9, COLORS = ["--p1", "--p2", "--p3", "--p4", "--p5", "--p6"];
+var SHAPES = [
+  [[0,0]], [[0,0],[0,1]], [[0,0],[1,0]],
+  [[0,0],[0,1],[0,2]], [[0,0],[1,0],[2,0]],
+  [[0,0],[0,1],[0,2],[0,3]], [[0,0],[1,0],[2,0],[3,0]],
+  [[0,0],[0,1],[0,2],[0,3],[0,4]], [[0,0],[1,0],[2,0],[3,0],[4,0]],
+  [[0,0],[0,1],[1,0],[1,1]], [[0,0],[0,1],[0,2],[1,0],[1,1],[1,2],[2,0],[2,1],[2,2]],
+  [[0,0],[1,0],[1,1]], [[0,0],[0,1],[1,0]], [[0,0],[0,1],[1,1]], [[0,1],[1,0],[1,1]],
+  [[0,0],[1,0],[2,0],[2,1],[2,2]], [[0,0],[0,1],[0,2],[1,0],[2,0]], [[0,0],[0,1],[0,2],[1,2],[2,2]], [[0,2],[1,2],[2,0],[2,1],[2,2]],
+  [[0,0],[0,1],[0,2],[1,1]], [[0,1],[1,0],[1,1],[1,2]], [[0,0],[1,0],[2,0],[1,1]], [[0,1],[1,0],[1,1],[2,1]],
+  [[0,1],[0,2],[1,0],[1,1]], [[0,0],[0,1],[1,1],[1,2]], [[0,0],[1,0],[1,1],[2,1]], [[0,1],[1,0],[1,1],[2,0]],
+  [[0,0],[1,0],[2,0],[2,1]], [[0,0],[0,1],[0,2],[1,0]], [[0,0],[0,1],[1,1],[2,1]], [[0,2],[1,0],[1,1],[1,2]]
+];
+var grid, tray, score, lines, combo, best = 0, sel = -1, cells = [], drag = null, over = false;
+try { best = +localStorage.getItem("sad-blocksudoku-best") || 0; } catch (e) {}
+
+/* ---------- app bridge: the phone app connects these to AdMob and rewards ---------- */
+function post(o) { try { if (window.StackBridge && window.StackBridge.postMessage) { window.StackBridge.postMessage(JSON.stringify(o)); return true; } } catch (e) {} return false; }
+function adBreak(done) {
+  if (post({ type: "interstitial", game: "blocksudoku" })) { window.stackAdClosed = function () { window.stackAdClosed = null; done(); }; return; }
+  var v = $("adBreak"), b = $("adGo"), n = 3; v.hidden = false; b.disabled = true; b.textContent = "Continue in " + n;
+  var iv = setInterval(function () { n--; if (n > 0) b.textContent = "Continue in " + n; else { clearInterval(iv); b.disabled = false; b.textContent = "Continue"; b.focus(); } }, 1000);
+  b.onclick = function () { v.hidden = true; done(); };
+}
+if (post({ type: "banner", game: "blocksudoku" })) $("adBanner").classList.add("live");
+
+/* ---------- rules ---------- */
+function size(sh) { var h = 0, w = 0; sh.forEach(function (p) { h = Math.max(h, p[0] + 1); w = Math.max(w, p[1] + 1); }); return { h: h, w: w }; }
+function fits(sh, r, c) { return sh.every(function (p) { var y = r + p[0], x = c + p[1]; return y >= 0 && x >= 0 && y < N && x < N && !grid[y * N + x]; }); }
+function anyFit(sh) { for (var r = 0; r < N; r++) for (var c = 0; c < N; c++) if (fits(sh, r, c)) return true; return false; }
+function fullLines(g) {
+  var rows = [], cols = [];
+  for (var i = 0; i < N; i++) {
+    var rf = true, cf = true;
+    for (var j = 0; j < N; j++) { if (!g[i * N + j]) rf = false; if (!g[j * N + i]) cf = false; }
+    if (rf) rows.push(i); if (cf) cols.push(i);
+  }
+  var boxes = [];
+  for (var b = 0; b < 9; b++) { var br = Math.floor(b / 3) * 3, bc = (b % 3) * 3, bf = true; for (var k = 0; k < 9; k++) if (!g[(br + Math.floor(k / 3)) * N + bc + k % 3]) bf = false; if (bf) boxes.push(b); }
+  return { rows: rows, cols: cols, boxes: boxes };
+}
+function lineCells(L) { var s = {}; L.rows.forEach(function (r) { for (var c = 0; c < N; c++) s[r * N + c] = 1; }); L.cols.forEach(function (c) { for (var r = 0; r < N; r++) s[r * N + c] = 1; }); (L.boxes || []).forEach(function (b) { var br = Math.floor(b / 3) * 3, bc = (b % 3) * 3; for (var k = 0; k < 9; k++) s[(br + Math.floor(k / 3)) * N + bc + k % 3] = 1; }); return s; }
+function deal() {
+  tray = [0, 1, 2].map(function () { return { sh: SHAPES[Math.floor(Math.random() * SHAPES.length)], col: COLORS[Math.floor(Math.random() * COLORS.length)] }; });
+}
+function place(i, r, c) {
+  var pc = tray[i]; if (!pc || !fits(pc.sh, r, c)) return false;
+  pc.sh.forEach(function (p) { grid[(r + p[0]) * N + c + p[1]] = pc.col; });
+  tray[i] = null; sel = -1;
+  var gain = pc.sh.length, L = fullLines(grid), n = L.rows.length + L.cols.length + L.boxes.length, boom = {};
+  if (n) {
+    boom = lineCells(L); Object.keys(boom).forEach(function (k) { grid[k] = null; });
+    combo++; lines += n;
+    var pts = n * n * 10 + (combo > 1 ? combo * 10 : 0); gain += pts;
+    say((n > 1 ? n + " lines! " : "Line! ") + "+" + pts + (combo > 1 ? "  Combo x" + combo : ""));
+  } else { combo = 0; say(""); }
+  score += gain;
+  if (score > best) { best = score; try { localStorage.setItem("sad-blocksudoku-best", best); } catch (e) {} }
+  if (tray.every(function (t) { return !t; })) deal();
+  render(boom);
+  var live = tray.filter(function (t) { return t; });
+  if (!live.some(function (t) { return anyFit(t.sh); })) gameOver();
+  return true;
+}
+function gameOver() {
+  over = true;
+  post({ type: "gameOver", game: "blocksudoku", score: score, lines: lines });
+  setTimeout(function () {
+    $("overScore").textContent = score;
+    $("overNote").textContent = lines + " lines cleared. Best: " + best + ".";
+    $("over").hidden = false; $("again").focus();
+  }, 500);
+}
+function newGame() { grid = new Array(N * N).fill(null); score = 0; lines = 0; combo = 0; sel = -1; over = false; deal(); $("over").hidden = true; say("Drag a piece onto the board"); render({}); }
+
+/* ---------- drawing ---------- */
+function say(s) { $("msg").textContent = s; }
+function buildBoard() {
+  var b = $("board");
+  for (var r = 0; r < N; r++) for (var c = 0; c < N; c++) (function (r, c) {
+    var el = document.createElement("button"); el.className = "cell"; el.setAttribute("role", "gridcell"); if ((Math.floor(r / 3) + Math.floor(c / 3)) % 2) el.dataset.alt = 1;
+    el.setAttribute("aria-label", "Row " + (r + 1) + ", column " + (c + 1));
+    el.addEventListener("click", function () { tapCell(r, c); });
+    b.appendChild(el); cells.push(el);
+  })(r, c);
+}
+function render(boom) {
+  $("score").textContent = score; $("lines").textContent = lines; $("best").textContent = best;
+  cells.forEach(function (el, k) {
+    var v = grid[k]; el.className = "cell" + (v ? " on" : "") + (boom[k] ? " boom" : "");
+    el.style.setProperty("--c", v ? "var(" + v + ")" : "transparent");
+  });
+  var t = $("tray"); t.textContent = "";
+  tray.forEach(function (pc, i) {
+    var b = document.createElement("button"); b.className = "slot";
+    if (!pc) { b.disabled = true; b.setAttribute("aria-label", "Empty"); t.appendChild(b); return; }
+    var dead = !anyFit(pc.sh); if (dead) b.classList.add("dead"); if (sel === i) b.classList.add("sel");
+    b.setAttribute("aria-label", pc.sh.length + " block piece" + (dead ? ", no room" : "") + (sel === i ? ", selected" : ""));
+    b.appendChild(pieceEl(pc, 18, 2));
+    b.addEventListener("pointerdown", function (e) { startDrag(e, i, b); });
+    b.addEventListener("click", function () { if (drag && drag.moved) return; sel = sel === i ? -1 : i; say(sel >= 0 ? "Now tap a square on the board" : ""); render({}); });
+    t.appendChild(b);
+  });
+}
+function pieceEl(pc, s, gap) {
+  var z = size(pc.sh), d = document.createElement("div"); d.className = "piece";
+  d.style.gridTemplate = "repeat(" + z.h + "," + s + "px) / repeat(" + z.w + "," + s + "px)"; d.style.gap = gap + "px"; d.style.setProperty("--s", s + "px");
+  pc.sh.forEach(function (p) { var i = document.createElement("i"); i.className = "blk"; i.style.setProperty("--c", "var(" + pc.col + ")"); i.style.gridArea = (p[0] + 1) + " / " + (p[1] + 1); d.appendChild(i); });
+  return d;
+}
+
+/* ---------- tap to place ---------- */
+function tapCell(r, c) {
+  if (over || sel < 0 || !tray[sel]) return;
+  var sh = tray[sel].sh;
+  for (var k = 0; k < sh.length; k++) { var y = r - sh[k][0], x = c - sh[k][1]; if (fits(sh, y, x)) { place(sel, y, x); return; } }
+  say("That piece doesn't fit there");
+}
+
+/* ---------- drag to place ---------- */
+function metrics() {
+  var b = $("board"), rc = b.getBoundingClientRect(), pad = 6, gap = 3;
+  return { left: rc.left + pad, top: rc.top + pad, cell: (rc.width - pad * 2 - gap * (N - 1)) / N, gap: gap };
+}
+function startDrag(e, i, slot) {
+  if (over || !tray[i]) return;
+  var m = metrics(), pc = tray[i], z = size(pc.sh);
+  drag = { i: i, slot: slot, m: m, z: z, x0: e.clientX, y0: e.clientY, moved: false, lift: e.pointerType === "mouse" ? 0 : m.cell * 1.2, at: null, el: null };
+  try { slot.setPointerCapture(e.pointerId); } catch (x) {}
+  slot.onpointermove = moveDrag; slot.onpointerup = endDrag; slot.onpointercancel = endDrag;
+}
+function moveDrag(e) {
+  if (!drag) return;
+  if (!drag.moved) {
+    if (Math.abs(e.clientX - drag.x0) + Math.abs(e.clientY - drag.y0) < 8) return;
+    drag.moved = true; sel = -1;
+    var f = pieceEl(tray[drag.i], drag.m.cell, drag.m.gap); f.className = "piece float"; document.body.appendChild(f); drag.el = f;
+    drag.slot.classList.add("lift");
+  }
+  var m = drag.m, w = drag.z.w * (m.cell + m.gap) - m.gap, h = drag.z.h * (m.cell + m.gap) - m.gap;
+  var x = e.clientX - w / 2, y = e.clientY - h - drag.lift + (drag.lift ? 0 : h / 2);
+  drag.el.style.transform = "translate(" + x + "px," + y + "px)";
+  var c = Math.round((x - m.left) / (m.cell + m.gap)), r = Math.round((y - m.top) / (m.cell + m.gap));
+  drag.at = fits(tray[drag.i].sh, r, c) ? [r, c] : null;
+  preview();
+}
+function preview() {
+  cells.forEach(function (el, k) { el.classList.remove("ghost", "clear"); if (!grid[k]) el.style.setProperty("--c", "transparent"); });
+  if (!drag || !drag.at) return;
+  var pc = tray[drag.i], g = grid.slice();
+  pc.sh.forEach(function (p) { var k = (drag.at[0] + p[0]) * N + drag.at[1] + p[1]; g[k] = pc.col; cells[k].classList.add("ghost"); cells[k].style.setProperty("--c", "var(" + pc.col + ")"); });
+  var hit = lineCells(fullLines(g)); Object.keys(hit).forEach(function (k) { cells[k].classList.add("clear"); });
+}
+function endDrag() {
+  if (!drag) return;
+  var d = drag; d.slot.onpointermove = d.slot.onpointerup = d.slot.onpointercancel = null;
+  if (d.el) d.el.remove();
+  d.slot.classList.remove("lift");
+  if (d.moved) {
+    if (!(d.at && place(d.i, d.at[0], d.at[1]))) { preview.call(null); render({}); }
+    setTimeout(function () { drag = null; }, 0);
+  } else drag = null;
+}
+
+$("newGame").addEventListener("click", newGame);
+$("again").addEventListener("click", function () { $("over").hidden = true; adBreak(newGame); });
+buildBoard(); newGame();
+})();
+</script>
+
+</body>
+</html>

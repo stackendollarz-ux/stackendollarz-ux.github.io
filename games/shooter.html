@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{box-sizing:border-box}body{margin:0}img{max-width:100%}[hidden]{display:none!important}.adbar{display:none!important}</style>
+<script>
+/* Website preview: no ads here, so ad breaks and "watch an ad" buttons continue right away. */
+window.StackBridge = { postMessage: function (raw) {
+  var m = {}; try { m = JSON.parse(raw); } catch (e) {}
+  setTimeout(function () {
+    if (m.type === "interstitial" && window.stackAdClosed) window.stackAdClosed();
+    if (m.type === "rewarded" && window.stackRewardEarned) window.stackRewardEarned();
+  }, 0);
+} };
+</script>
+</head>
+<body>
+<title>Stack a Dollar Sky Guard</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&display=swap">
+<style>
+/* Layout: one screen. Score bar, a night-sky playfield where your gold ship guards the vault from waves of drones (drag to steer, it fires on its own), ad banner space. Same family look as the other Stack a Dollar games; one dark look by choice. */
+:root {
+  color-scheme: dark;
+  --felt: #5E9E1B; --felt-deep: #3F7A12; --bar: #17240C; --well: #24380F; --ink: #FFFFFF; --muted: #D8E8C4;
+  --wood: #9A5A2E; --wood-deep: #6E3D1D; --gold: #F4B321; --gold-ink: #2A1B00;
+  --p1: #F4B321; --p2: #39B8F2; --p3: #F2456B; --p4: #F28C28; --p5: #A77BF5; --p6: #2EC4A0;
+  --card: #FBF8EE; --edge: #B9AE93; --black: #18140F; --red: #C4162E;
+  --font: 'Baloo 2', 'Trebuchet MS', 'Segoe UI', Arial, sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { background: var(--felt-deep); color: var(--ink); font-family: var(--font); font-size: 1rem; font-weight: 600; display: flex; flex-direction: column; overflow: hidden; -webkit-user-select: none; user-select: none; }
+button { font: inherit; color: inherit; cursor: pointer; border: none; background: none; padding: 0; }
+button:focus-visible { outline: 3px solid #FFFFFF; outline-offset: 2px; }
+.bar { padding-inline: 16px; padding-block: 8px; background: var(--bar); display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 2px 10px; }
+.brand { flex: 0 0 100%; text-align: center; font-weight: 800; font-size: 1.15rem; line-height: 1.1; color: var(--gold); }
+.brand span { color: var(--ink); }
+.side { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; line-height: 1.1; }
+.side.r { align-items: flex-end; }
+.side span { color: var(--muted); font-size: 0.85rem; }
+.side b { font-size: 1.7rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.goal { background: var(--gold); color: var(--gold-ink); border-radius: 10px; padding: 2px 16px; text-align: center; line-height: 1.05; }
+.goal b { display: block; font-size: 1.5rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.goal span { font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; }
+.new { border: 2px solid #4C6A2C; border-radius: 8px; min-height: 40px; padding: 0 10px; font-size: 0.9rem; }
+.stage { position: relative; flex: 1 1 0; min-height: 0; padding-inline: 16px; padding-block: 12px 8px; background: radial-gradient(ellipse at 50% 40%, var(--felt) 0%, var(--felt-deep) 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; overflow: hidden; }
+#msg { min-height: 1.4em; text-align: center; font-weight: 800; color: var(--gold); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7); max-width: 460px; }
+.rack { padding-inline: 16px; padding-block: 10px 12px; background: var(--wood); border-top: 6px solid var(--wood-deep); box-shadow: inset 0 10px 14px rgba(0, 0, 0, 0.25); }
+.tools { max-width: 440px; margin-inline: auto; display: grid; grid-template-columns: repeat(var(--n, 2), minmax(0, 1fr)); gap: 8px; }
+.tool { min-height: 48px; border-radius: 10px; background: var(--bar); font-weight: 800; line-height: 1.1; padding: 4px; }
+.tool small { display: block; font-size: 0.72rem; color: var(--muted); font-weight: 600; }
+.tool.gold { background: var(--gold); color: var(--gold-ink); }
+.tool.gold small { color: var(--gold-ink); }
+.tool:disabled { opacity: 0.45; cursor: default; }
+.adbar { background: var(--bar); padding-inline: 16px; padding-block: 6px; }
+.ad { width: min(320px, 100%); height: 50px; margin-inline: auto; display: flex; align-items: center; justify-content: center; border: 1px dashed #4C6A2C; border-radius: 6px; color: #8FA878; font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; }
+.ad.live { border-color: transparent; color: transparent; }
+.veil { position: fixed; inset: 0; z-index: 10; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(8, 20, 2, 0.78); }
+.box { background: var(--bar); border: 3px solid var(--gold); border-radius: 14px; padding: 18px; width: 100%; max-width: 340px; display: flex; flex-direction: column; gap: 10px; text-align: center; }
+.box h2 { margin: 0; font-size: 1.5rem; font-weight: 800; color: var(--gold); line-height: 1.1; text-wrap: balance; }
+.box p { margin: 0; color: var(--muted); }
+.box .big { font-size: 2.6rem; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+.go { background: var(--gold); color: var(--gold-ink); border-radius: 10px; min-height: 48px; font-weight: 800; font-size: 1.1rem; }
+.go.alt { background: transparent; color: var(--ink); border: 2px solid #4C6A2C; }
+.go:disabled { opacity: 0.55; cursor: default; }
+.adfake { height: 180px; border: 1px dashed #4C6A2C; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #8FA878; letter-spacing: 0.08em; text-transform: uppercase; font-size: 0.85rem; }
+
+.stage { padding-block: 8px; }
+canvas { display: block; touch-action: none; border-radius: 10px; box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4); }
+#lives { color: var(--p3); letter-spacing: 0.1em; }
+</style>
+
+<div class="bar">
+  <div class="brand">Stack a Dollar <span>Sky Guard</span></div>
+  <div class="side"><span>Score</span><b id="score">0</b></div>
+  <div class="goal"><b id="wave">1</b><span>Wave</span></div>
+  <div class="side r"><span>Lives</span><b id="lives">♥︎♥︎♥︎</b></div>
+</div>
+<div class="stage" id="stage">
+  <canvas id="cv" aria-label="Playfield. Drag left and right to steer. Your ship fires on its own."></canvas>
+  <div id="msg" role="status" aria-live="polite">Drag to steer. Catch falling coins for bonus points.</div>
+</div>
+<div class="rack"><div class="tools" style="--n: 1"><button class="tool" id="pause">Pause</button></div></div>
+<div class="adbar"><div class="ad" id="adBanner">Ad space</div></div>
+<div class="veil" id="adBreak" hidden><div class="box">
+  <p id="adLabel">Ad break</p>
+  <div class="adfake">Ad shows here in the app</div>
+  <button class="go" id="adGo" disabled>Continue</button>
+</div></div>
+<div class="veil" id="won" hidden><div class="box">
+  <h2 id="wonT">Wave 1 cleared!</h2>
+  <p id="wonP"></p>
+  <button class="go" id="next">Next wave</button>
+</div></div>
+<div class="veil" id="lost" hidden><div class="box">
+  <h2>Ship down</h2>
+  <p id="lostP"></p>
+  <button class="go" id="rescue">Extra ship<br><small>Watch an ad</small></button>
+  <button class="go alt" id="retry">Start over</button>
+</div></div>
+
+<script>
+(function () {
+"use strict";
+var $ = function (id) { return document.getElementById(id); }, GAME = "skyguard";
+/* ---------- app bridge: the phone app connects these to AdMob and rewards ---------- */
+function post(o) { o.game = GAME; try { if (window.StackBridge && window.StackBridge.postMessage) { window.StackBridge.postMessage(JSON.stringify(o)); return true; } } catch (e) {} return false; }
+function showAd(kind, label, done) {
+  if (post({ type: kind })) { window[kind === "rewarded" ? "stackRewardEarned" : "stackAdClosed"] = function () { done(); }; return; }
+  var v = $("adBreak"), b = $("adGo"), n = kind === "rewarded" ? 5 : 3; $("adLabel").textContent = label || "Ad break";
+  v.hidden = false; b.disabled = true; b.textContent = "Continue in " + n;
+  var iv = setInterval(function () { n--; if (n > 0) b.textContent = "Continue in " + n; else { clearInterval(iv); b.disabled = false; b.textContent = "Continue"; b.focus(); } }, 1000);
+  b.onclick = function () { v.hidden = true; done(); };
+}
+if (post({ type: "banner" })) $("adBanner").classList.add("live");
+function store(k, v) { try { if (v === undefined) return localStorage.getItem("sad-" + GAME + "-" + k); localStorage.setItem("sad-" + GAME + "-" + k, v); } catch (e) { return null; } }
+
+var cv = $("cv"), ctx = cv.getContext("2d"), W = 360, H = 560, sc = 1, dpr = 1;
+var ship, shots, bombs, foes, coins, sparks, stars, score, lives, wave = 1, running = false, paused = false, lastT = 0, fireT = 0, march = 1, inv = 0, best = +store("best") || 0, keys = {};
+var FCOL = ["#F2456B", "#39B8F2", "#A77BF5", "#2EC4A0", "#F28C28"];
+
+function newWave() {
+  foes = []; shots = []; bombs = []; coins = []; sparks = [];
+  var rows = Math.min(5, 2 + Math.floor(wave / 2)), cols = 6;
+  for (var r = 0; r < rows; r++) for (var c = 0; c < cols; c++) foes.push({ x: 50 + c * 52, y: 70 + r * 42, hp: r === 0 && wave > 2 ? 2 : 1, col: FCOL[r % FCOL.length], dive: null });
+  march = 1; inv = 0; hud();
+}
+function reset() { score = 0; lives = 3; wave = 1; ship = { x: W / 2, y: H - 50 }; stars = []; for (var i = 0; i < 60; i++) stars.push({ x: Math.random() * W, y: Math.random() * H, s: Math.random() * 1.6 + 0.4 }); newWave(); }
+
+function update(dt) {
+  if (keys.ArrowLeft) ship.x -= 260 * dt; if (keys.ArrowRight) ship.x += 260 * dt;
+  ship.x = Math.max(22, Math.min(W - 22, ship.x));
+  stars.forEach(function (s) { s.y += s.s * 30 * dt; if (s.y > H) { s.y = 0; s.x = Math.random() * W; } });
+  if (inv > 0) inv -= dt;
+  fireT -= dt; if (fireT <= 0) { shots.push({ x: ship.x, y: ship.y - 20 }); fireT = 0.32; }
+  shots.forEach(function (s) { s.y -= 520 * dt; }); shots = shots.filter(function (s) { return s.y > -10; });
+  var sp = 22 + wave * 5 + (30 - foes.length) * 1.2, edge = false;
+  foes.forEach(function (f) { if (!f.dive) { f.x += march * sp * dt; if (f.x < 22 || f.x > W - 22) edge = true; } });
+  if (edge) { march = -march; foes.forEach(function (f) { if (!f.dive) { f.y += 14; f.x = Math.max(22, Math.min(W - 22, f.x)); } }); }
+  if (Math.random() < dt * (0.25 + wave * 0.06) && foes.length) { var d = foes[Math.floor(Math.random() * foes.length)]; if (!d.dive) d.dive = { t: 0, x0: d.x, y0: d.y }; }
+  foes.forEach(function (f) {
+    if (f.dive) { f.dive.t += dt; f.y += (150 + wave * 10) * dt; f.x = f.dive.x0 + Math.sin(f.dive.t * 3) * 60; if (f.y > H + 30) { f.y = 40; f.x = f.dive.x0; f.dive = null; } }
+    if (Math.random() < dt * (0.08 + wave * 0.02)) bombs.push({ x: f.x, y: f.y + 12 });
+  });
+  bombs.forEach(function (b) { b.y += (170 + wave * 8) * dt; }); bombs = bombs.filter(function (b) { return b.y < H + 10; });
+  coins.forEach(function (c) { c.y += 120 * dt; }); coins = coins.filter(function (c) { return c.y < H + 10; });
+  sparks.forEach(function (p) { p.x += p.vx * dt; p.y += p.vy * dt; p.t -= dt; }); sparks = sparks.filter(function (p) { return p.t > 0; });
+  shots.forEach(function (s) { foes.forEach(function (f) { if (!s.dead && Math.abs(s.x - f.x) < 18 && Math.abs(s.y - f.y) < 14) { s.dead = true; f.hp--; if (f.hp <= 0) { f.dead = true; score += f.dive ? 40 : 20; boom(f.x, f.y, f.col); if (Math.random() < 0.18) coins.push({ x: f.x, y: f.y }); } } }); });
+  shots = shots.filter(function (s) { return !s.dead; }); foes = foes.filter(function (f) { return !f.dead; });
+  coins.forEach(function (c) { if (Math.abs(c.x - ship.x) < 24 && Math.abs(c.y - ship.y) < 22) { c.got = true; score += 50; say("+50 coin!"); } }); coins = coins.filter(function (c) { return !c.got; });
+  if (inv <= 0) {
+    var hit = bombs.some(function (b) { return Math.abs(b.x - ship.x) < 16 && Math.abs(b.y - ship.y) < 16; }) || foes.some(function (f) { return Math.abs(f.x - ship.x) < 26 && Math.abs(f.y - ship.y) < 22; }) || foes.some(function (f) { return !f.dive && f.y > H - 80; });
+    if (hit) return hurt();
+  }
+  hud();
+  if (!foes.length) cleared();
+}
+function boom(x, y, col) { for (var i = 0; i < 10; i++) { var a = Math.random() * 7; sparks.push({ x: x, y: y, vx: Math.cos(a) * 120, vy: Math.sin(a) * 120, t: 0.4, col: col }); } }
+function hurt() {
+  lives--; boom(ship.x, ship.y, "#F4B321"); hud();
+  bombs = []; foes.forEach(function (f) { if (f.dive) { f.dive = null; f.y = 40; } if (f.y > H - 140) f.y = H - 140; });
+  if (lives > 0) { inv = 2; say("Hit! " + lives + (lives === 1 ? " ship" : " ships") + " left."); return; }
+  running = false; draw();
+  if (score > best) { best = score; store("best", best); }
+  post({ type: "gameOver", score: score, wave: wave });
+  $("lostP").textContent = "Score " + score + ". Best " + best + "."; $("lost").hidden = false; $("rescue").focus();
+}
+function cleared() {
+  running = false; score += 100 * wave; hud(); post({ type: "levelComplete", level: wave, score: score });
+  $("wonT").textContent = "Wave " + wave + " cleared!"; $("wonP").textContent = "+" + 100 * wave + " wave bonus. Score " + score + ".";
+  setTimeout(function () { $("won").hidden = false; $("next").focus(); }, 300);
+}
+function loop(t) {
+  if (!running) return;
+  var dt = Math.min(0.05, (t - lastT) / 1000 || 0); lastT = t;
+  if (!paused) update(dt);
+  draw(); if (running) requestAnimationFrame(loop);
+}
+function go() { running = true; paused = false; $("pause").textContent = "Pause"; lastT = performance.now(); requestAnimationFrame(loop); }
+
+function say(s) { $("msg").textContent = s; }
+function hud() { $("score").textContent = score; $("wave").textContent = wave; var h = ""; for (var i = 0; i < Math.max(3, lives); i++) h += i < lives ? "♥︎" : "♡"; $("lives").textContent = h; $("lives").setAttribute("aria-label", lives + " ships"); }
+function size() {
+  var st = $("stage"), w = st.clientWidth - 32, h = st.clientHeight - 46;
+  sc = Math.min(w / W, h / H); dpr = window.devicePixelRatio || 1;
+  cv.style.width = W * sc + "px"; cv.style.height = H * sc + "px"; cv.width = W * sc * dpr; cv.height = H * sc * dpr;
+  ctx.setTransform(sc * dpr, 0, 0, sc * dpr, 0, 0); draw();
+}
+function draw() {
+  if (!ship) return;
+  ctx.fillStyle = "#0E1608"; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = "#D8E8C4"; stars.forEach(function (s) { ctx.globalAlpha = s.s / 2; ctx.fillRect(s.x, s.y, s.s, s.s); }); ctx.globalAlpha = 1;
+  ctx.fillStyle = "#24380F"; ctx.fillRect(0, H - 14, W, 14); ctx.fillStyle = "#3F7A12"; for (var i = 0; i < W; i += 24) ctx.fillRect(i, H - 14, 12, 4);
+  foes.forEach(function (f) {
+    ctx.fillStyle = f.col; ctx.beginPath(); ctx.moveTo(f.x - 18, f.y); ctx.lineTo(f.x - 8, f.y - 10); ctx.lineTo(f.x + 8, f.y - 10); ctx.lineTo(f.x + 18, f.y); ctx.lineTo(f.x + 8, f.y + 10); ctx.lineTo(f.x - 8, f.y + 10); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = f.hp > 1 ? "#FFFFFF" : "#0E1608"; ctx.fillRect(f.x - 6, f.y - 3, 12, 6);
+  });
+  ctx.fillStyle = "#F4B321"; shots.forEach(function (s) { ctx.fillRect(s.x - 2, s.y - 8, 4, 12); });
+  ctx.fillStyle = "#F2456B"; bombs.forEach(function (b) { ctx.beginPath(); ctx.arc(b.x, b.y, 4, 0, 7); ctx.fill(); });
+  coins.forEach(function (c) { ctx.fillStyle = "#F4B321"; ctx.beginPath(); ctx.arc(c.x, c.y, 9, 0, 7); ctx.fill(); ctx.fillStyle = "#2A1B00"; ctx.font = "800 12px 'Baloo 2', sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("$", c.x, c.y + 1); });
+  sparks.forEach(function (p) { ctx.globalAlpha = p.t / 0.4; ctx.fillStyle = p.col; ctx.fillRect(p.x - 2, p.y - 2, 4, 4); }); ctx.globalAlpha = 1;
+  if (lives > 0 && !(inv > 0 && Math.floor(inv * 10) % 2)) {
+    var x = ship.x, y = ship.y;
+    ctx.fillStyle = "#A87700"; ctx.beginPath(); ctx.moveTo(x, y - 22); ctx.lineTo(x + 20, y + 14); ctx.lineTo(x - 20, y + 14); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = "#F4B321"; ctx.beginPath(); ctx.moveTo(x, y - 20); ctx.lineTo(x + 16, y + 10); ctx.lineTo(x - 16, y + 10); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = "#2A1B00"; ctx.font = "800 14px 'Baloo 2', sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("$", x, y + 1);
+  }
+  if (paused) { ctx.fillStyle = "rgba(8,20,2,0.6)"; ctx.fillRect(0, 0, W, H); ctx.fillStyle = "#F4B321"; ctx.font = "800 36px 'Baloo 2', sans-serif"; ctx.textAlign = "center"; ctx.fillText("Paused", W / 2, H / 2); }
+}
+
+function steer(e) { var r = cv.getBoundingClientRect(); ship.x = Math.max(22, Math.min(W - 22, (e.clientX - r.left) / sc)); }
+$("stage").addEventListener("pointerdown", function (e) { if (running && !paused) steer(e); });
+$("stage").addEventListener("pointermove", function (e) { if (running && !paused && (e.buttons || e.pointerType !== "mouse")) steer(e); });
+document.addEventListener("keydown", function (e) { if (e.key === "ArrowLeft" || e.key === "ArrowRight") { keys[e.key] = true; e.preventDefault(); } });
+document.addEventListener("keyup", function (e) { keys[e.key] = false; });
+$("pause").addEventListener("click", function () { if (!running) return; paused = !paused; $("pause").textContent = paused ? "Play" : "Pause"; if (!paused) lastT = performance.now(); draw(); });
+$("next").addEventListener("click", function () { $("won").hidden = true; wave++; var cont = function () { newWave(); go(); say("Wave " + wave + "!"); }; if (wave % 2 === 1) showAd("interstitial", "", cont); else cont(); });
+$("rescue").addEventListener("click", function () { $("lost").hidden = true; showAd("rewarded", "Watch for an extra ship", function () { lives = 1; inv = 2; hud(); go(); say("Extra ship! Keep going."); }); });
+$("retry").addEventListener("click", function () { $("lost").hidden = true; showAd("interstitial", "", function () { reset(); go(); }); });
+document.addEventListener("visibilitychange", function () { if (document.hidden && running && !paused) $("pause").click(); });
+window.addEventListener("resize", size);
+reset(); size(); go();
+})();
+</script>
+
+</body>
+</html>

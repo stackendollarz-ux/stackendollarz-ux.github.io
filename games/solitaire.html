@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{box-sizing:border-box}body{margin:0}img{max-width:100%}[hidden]{display:none!important}.adbar{display:none!important}</style>
+<script>
+/* Website preview: no ads here, so ad breaks and "watch an ad" buttons continue right away. */
+window.StackBridge = { postMessage: function (raw) {
+  var m = {}; try { m = JSON.parse(raw); } catch (e) {}
+  setTimeout(function () {
+    if (m.type === "interstitial" && window.stackAdClosed) window.stackAdClosed();
+    if (m.type === "rewarded" && window.stackRewardEarned) window.stackRewardEarned();
+  }, 0);
+} };
+</script>
+</head>
+<body>
+<title>Stack a Dollar Solitaire</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&display=swap">
+<style>
+/* Layout: one screen. Score bar, stock + waste + four foundations across the top of the felt, seven tableau columns below, tools and ad banner space at the bottom. Tap a card to send it to its best spot. Same family look as the other Stack a Dollar games; one dark look by choice. */
+:root {
+  color-scheme: dark;
+  --felt: #5E9E1B; --felt-deep: #3F7A12; --bar: #17240C; --well: #24380F; --ink: #FFFFFF; --muted: #D8E8C4;
+  --wood: #9A5A2E; --wood-deep: #6E3D1D; --gold: #F4B321; --gold-ink: #2A1B00;
+  --p1: #F4B321; --p2: #39B8F2; --p3: #F2456B; --p4: #F28C28; --p5: #A77BF5; --p6: #2EC4A0;
+  --card: #FBF8EE; --edge: #B9AE93; --black: #18140F; --red: #C4162E;
+  --font: 'Baloo 2', 'Trebuchet MS', 'Segoe UI', Arial, sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { background: var(--felt-deep); color: var(--ink); font-family: var(--font); font-size: 1rem; font-weight: 600; display: flex; flex-direction: column; overflow: hidden; -webkit-user-select: none; user-select: none; }
+button { font: inherit; color: inherit; cursor: pointer; border: none; background: none; padding: 0; }
+button:focus-visible { outline: 3px solid #FFFFFF; outline-offset: 2px; }
+.bar { padding-inline: 16px; padding-block: 8px; background: var(--bar); display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 2px 10px; }
+.brand { flex: 0 0 100%; text-align: center; font-weight: 800; font-size: 1.15rem; line-height: 1.1; color: var(--gold); }
+.brand span { color: var(--ink); }
+.side { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; line-height: 1.1; }
+.side.r { align-items: flex-end; }
+.side span { color: var(--muted); font-size: 0.85rem; }
+.side b { font-size: 1.7rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.goal { background: var(--gold); color: var(--gold-ink); border-radius: 10px; padding: 2px 16px; text-align: center; line-height: 1.05; }
+.goal b { display: block; font-size: 1.5rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.goal span { font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; }
+.new { border: 2px solid #4C6A2C; border-radius: 8px; min-height: 40px; padding: 0 10px; font-size: 0.9rem; }
+.stage { position: relative; flex: 1 1 0; min-height: 0; padding-inline: 16px; padding-block: 12px 8px; background: radial-gradient(ellipse at 50% 40%, var(--felt) 0%, var(--felt-deep) 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; overflow: hidden; }
+#msg { min-height: 1.4em; text-align: center; font-weight: 800; color: var(--gold); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7); max-width: 460px; }
+.rack { padding-inline: 16px; padding-block: 10px 12px; background: var(--wood); border-top: 6px solid var(--wood-deep); box-shadow: inset 0 10px 14px rgba(0, 0, 0, 0.25); }
+.tools { max-width: 440px; margin-inline: auto; display: grid; grid-template-columns: repeat(var(--n, 2), minmax(0, 1fr)); gap: 8px; }
+.tool { min-height: 48px; border-radius: 10px; background: var(--bar); font-weight: 800; line-height: 1.1; padding: 4px; }
+.tool small { display: block; font-size: 0.72rem; color: var(--muted); font-weight: 600; }
+.tool.gold { background: var(--gold); color: var(--gold-ink); }
+.tool.gold small { color: var(--gold-ink); }
+.tool:disabled { opacity: 0.45; cursor: default; }
+.adbar { background: var(--bar); padding-inline: 16px; padding-block: 6px; }
+.ad { width: min(320px, 100%); height: 50px; margin-inline: auto; display: flex; align-items: center; justify-content: center; border: 1px dashed #4C6A2C; border-radius: 6px; color: #8FA878; font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; }
+.ad.live { border-color: transparent; color: transparent; }
+.veil { position: fixed; inset: 0; z-index: 10; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(8, 20, 2, 0.78); }
+.box { background: var(--bar); border: 3px solid var(--gold); border-radius: 14px; padding: 18px; width: 100%; max-width: 340px; display: flex; flex-direction: column; gap: 10px; text-align: center; }
+.box h2 { margin: 0; font-size: 1.5rem; font-weight: 800; color: var(--gold); line-height: 1.1; text-wrap: balance; }
+.box p { margin: 0; color: var(--muted); }
+.box .big { font-size: 2.6rem; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+.go { background: var(--gold); color: var(--gold-ink); border-radius: 10px; min-height: 48px; font-weight: 800; font-size: 1.1rem; }
+.go.alt { background: transparent; color: var(--ink); border: 2px solid #4C6A2C; }
+.go:disabled { opacity: 0.55; cursor: default; }
+.adfake { height: 180px; border: 1px dashed #4C6A2C; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #8FA878; letter-spacing: 0.08em; text-transform: uppercase; font-size: 0.85rem; }
+
+:root { --cw: min(60px, calc((100vw - 32px - 30px) / 7)); --ch: calc(var(--cw) * 1.4); }
+.stage { justify-content: flex-start; overflow-y: auto; }
+.table { width: calc(var(--cw) * 7 + 30px); display: flex; flex-direction: column; gap: 14px; }
+.row, .tab { display: grid; grid-template-columns: repeat(7, var(--cw)); gap: 5px; align-items: start; }
+.slot { width: var(--cw); height: var(--ch); border-radius: calc(var(--cw) * 0.12); border: 2px dashed rgba(255, 255, 255, 0.28); display: flex; align-items: center; justify-content: center; color: rgba(255, 255, 255, 0.35); font-size: calc(var(--cw) * 0.5); position: relative; }
+.slot > .c { position: absolute; left: -2px; top: -2px; }
+.col { display: flex; flex-direction: column; min-height: var(--ch); }
+.c { width: var(--cw); height: var(--ch); flex: none; border-radius: calc(var(--cw) * 0.12); background: var(--card); color: var(--black); position: relative; box-shadow: 0 1px 0 var(--edge), 0 2px 4px rgba(0, 0, 0, 0.35); font-size: calc(var(--cw) / 2.6); text-align: left; }
+.c.red { color: var(--red); }
+.c b { position: absolute; left: 0.22em; top: 0.02em; font-size: 1.15em; font-weight: 800; line-height: 1.2; }
+.c i { position: absolute; left: 0.26em; top: 1.3em; font-style: normal; font-size: 0.85em; line-height: 1; }
+.c u { position: absolute; right: 0.16em; bottom: 0.12em; text-decoration: none; font-size: 1.9em; line-height: 1; }
+.c.down { background: repeating-linear-gradient(45deg, #2F5A12 0 6px, #3B6E17 6px 12px); box-shadow: inset 0 0 0 3px var(--gold), 0 2px 4px rgba(0, 0, 0, 0.35); color: var(--gold); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: calc(var(--cw) * 0.38); }
+.col > .c + .c { margin-top: calc(var(--ch) * -0.66); }
+.col > .c.down + .c { margin-top: calc(var(--ch) * -0.84); }
+.c.pop { animation: pop 0.2s ease-out; }
+.c.no { animation: shake 0.3s; }
+@keyframes pop { from { transform: scale(1.12); } }
+@keyframes shake { 25% { translate: -4px 0; } 75% { translate: 4px 0; } }
+@media (prefers-reduced-motion: reduce) { .c.pop, .c.no { animation: none; } }
+</style>
+
+<div class="bar">
+  <div class="brand">Stack a Dollar <span>Solitaire</span></div>
+  <div class="side"><span>Moves</span><b id="moves">0</b></div>
+  <div class="goal"><b id="time">0:00</b><span>Time</span></div>
+  <div class="side r"><span>Wins</span><b id="wins">0</b></div>
+  <button class="new" id="newGame">New game</button>
+</div>
+<div class="stage">
+  <div class="table">
+    <div class="row">
+      <button class="slot" id="stock" aria-label="Draw a card"></button>
+      <div class="slot" id="waste"></div>
+      <div></div>
+      <div class="slot" id="fS">♠︎</div><div class="slot" id="fH">♥︎</div><div class="slot" id="fC">♣︎</div><div class="slot" id="fD">♦︎</div>
+    </div>
+    <div class="tab" id="tab"></div>
+  </div>
+  <div id="msg" role="status" aria-live="polite">Tap a card to move it. Tap the deck to draw.</div>
+</div>
+<div class="rack"><div class="tools" style="--n: 3">
+  <button class="tool" id="undo">Undo</button>
+  <button class="tool gold" id="hint">Hint<small>Watch an ad</small></button>
+  <button class="tool" id="finish" disabled>Auto finish</button>
+</div></div>
+<div class="adbar"><div class="ad" id="adBanner">Ad space</div></div>
+<div class="veil" id="adBreak" hidden><div class="box">
+  <p id="adLabel">Ad break</p>
+  <div class="adfake">Ad shows here in the app</div>
+  <button class="go" id="adGo" disabled>Continue</button>
+</div></div>
+<div class="veil" id="won" hidden><div class="box">
+  <h2>You stacked it!</h2>
+  <p id="wonP"></p>
+  <button class="go" id="again">Next game</button>
+</div></div>
+
+<script>
+(function () {
+"use strict";
+var $ = function (id) { return document.getElementById(id); }, GAME = "solitaire";
+/* ---------- app bridge: the phone app connects these to AdMob and rewards ---------- */
+function post(o) { o.game = GAME; try { if (window.StackBridge && window.StackBridge.postMessage) { window.StackBridge.postMessage(JSON.stringify(o)); return true; } } catch (e) {} return false; }
+function showAd(kind, label, done) {
+  if (post({ type: kind })) { window[kind === "rewarded" ? "stackRewardEarned" : "stackAdClosed"] = function () { done(); }; return; }
+  var v = $("adBreak"), b = $("adGo"), n = kind === "rewarded" ? 5 : 3; $("adLabel").textContent = label || "Ad break";
+  v.hidden = false; b.disabled = true; b.textContent = "Continue in " + n;
+  var iv = setInterval(function () { n--; if (n > 0) b.textContent = "Continue in " + n; else { clearInterval(iv); b.disabled = false; b.textContent = "Continue"; b.focus(); } }, 1000);
+  b.onclick = function () { v.hidden = true; done(); };
+}
+if (post({ type: "banner" })) $("adBanner").classList.add("live");
+function store(k, v) { try { if (v === undefined) return localStorage.getItem("sad-" + GAME + "-" + k); localStorage.setItem("sad-" + GAME + "-" + k, v); } catch (e) { return null; } }
+
+var SUITS = ["S", "H", "C", "D"], SYM = { S: "♠︎", H: "♥︎", C: "♣︎", D: "♦︎" }, WORD = { S: "spades", H: "hearts", C: "clubs", D: "diamonds" }, RN = { 1: "A", 11: "J", 12: "Q", 13: "K" };
+var st, hist, moves, t0, timer, last = {}, wins = +store("wins") || 0, autoing = false;
+var red = function (c) { return c.s === "H" || c.s === "D"; }, rk = function (c) { return RN[c.r] || String(c.r); }, cid = function (c) { return c.s + c.r; };
+
+function deal() {
+  var d = []; SUITS.forEach(function (s) { for (var r = 1; r <= 13; r++) d.push({ s: s, r: r, up: false }); });
+  for (var i = d.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), x = d[i]; d[i] = d[j]; d[j] = x; }
+  var tab = [[], [], [], [], [], [], []];
+  for (i = 0; i < 7; i++) for (j = i; j < 7; j++) tab[j].push(d.pop());
+  tab.forEach(function (c) { c[c.length - 1].up = true; });
+  st = { stock: d, waste: [], found: { S: [], H: [], C: [], D: [] }, tab: tab };
+  hist = []; moves = 0; t0 = 0; clearInterval(timer); autoing = false; last = {};
+  $("won").hidden = true; say("Tap a card to move it. Tap the deck to draw."); render();
+}
+function save() { hist.push(JSON.stringify(st)); if (hist.length > 300) hist.shift(); }
+function tick() { moves++; if (!t0) { t0 = Date.now(); timer = setInterval(showTime, 1000); } }
+function showTime() { var s = t0 ? Math.floor((Date.now() - t0) / 1000) : 0; $("time").textContent = Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); }
+function canFound(c) { var f = st.found[c.s]; return f.length ? f[f.length - 1].r === c.r - 1 : c.r === 1; }
+function fits(c, k) { var t = st.tab[k]; if (!t.length) return c.r === 13; var top = t[t.length - 1]; return top.up && red(top) !== red(c) && top.r === c.r + 1; }
+function runOf(from) {
+  if (from.t === "waste") return st.waste.length ? [st.waste[st.waste.length - 1]] : null;
+  if (from.t === "found") { var f = st.found[from.s]; return f.length ? [f[f.length - 1]] : null; }
+  var col = st.tab[from.k]; return col[from.i] && col[from.i].up ? col.slice(from.i) : null;
+}
+function destFor(from, run) {
+  var c = run[0];
+  if (run.length === 1 && from.t !== "found" && canFound(c)) return { t: "found" };
+  var ks = [0, 1, 2, 3, 4, 5, 6].filter(function (k) { return !(from.t === "tab" && from.k === k) && fits(c, k); });
+  ks = ks.filter(function (k) { return st.tab[k].length || !(from.t === "tab" && from.i === 0); });
+  ks.sort(function (a, b) { return (st.tab[b].length ? 1 : 0) - (st.tab[a].length ? 1 : 0); });
+  return ks.length ? { t: "tab", k: ks[0] } : null;
+}
+function move(from) {
+  if (autoing) return;
+  var run = runOf(from); if (!run) return;
+  var dest = destFor(from, run);
+  if (!dest) { shake(cid(run[0])); say("No place for that card yet"); return; }
+  save();
+  if (from.t === "waste") st.waste.pop(); else if (from.t === "found") st.found[from.s].pop(); else { st.tab[from.k].splice(from.i); var col = st.tab[from.k]; if (col.length && !col[col.length - 1].up) col[col.length - 1].up = true; }
+  if (dest.t === "found") st.found[run[0].s].push(run[0]); else run.forEach(function (c) { st.tab[dest.k].push(c); });
+  last = {}; run.forEach(function (c) { last[cid(c)] = 1; });
+  tick(); say(""); after();
+}
+function draw() {
+  if (autoing) return;
+  save();
+  if (st.stock.length) { var c = st.stock.pop(); c.up = true; st.waste.push(c); last = {}; last[cid(c)] = 1; }
+  else if (st.waste.length) { st.stock = st.waste.reverse().map(function (c) { c.up = false; return c; }); st.waste = []; }
+  else { hist.pop(); return; }
+  tick(); after();
+}
+function after() {
+  render();
+  var n = SUITS.reduce(function (a, s) { return a + st.found[s].length; }, 0);
+  if (n === 52) win();
+}
+function canAuto() { return !st.stock.length && !st.waste.length && st.tab.every(function (c) { return c.every(function (x) { return x.up; }); }); }
+function autoFinish() {
+  autoing = true;
+  var step = function () {
+    for (var k = 0; k < 7; k++) { var col = st.tab[k]; if (col.length && canFound(col[col.length - 1])) { var c = col.pop(); st.found[c.s].push(c); moves++; last = {}; last[cid(c)] = 1; render(); return setTimeout(step, 90); } }
+    autoing = false; after();
+  };
+  step();
+}
+function win() {
+  clearInterval(timer); wins++; store("wins", wins);
+  post({ type: "gameOver", won: true, moves: moves });
+  $("wonP").textContent = "Done in " + moves + " moves and " + $("time").textContent + ".";
+  setTimeout(function () { $("won").hidden = false; $("again").focus(); }, 400);
+}
+function hintMove() {
+  var tries = [{ t: "waste" }];
+  st.tab.forEach(function (col, k) { col.forEach(function (c, i) { if (c.up) tries.push({ t: "tab", k: k, i: i }); }); });
+  for (var i = 0; i < tries.length; i++) {
+    var run = runOf(tries[i]); if (!run) continue;
+    var d = destFor(tries[i], run);
+    if (d && !(tries[i].t === "tab" && tries[i].i > 0 && d.t === "tab" && st.tab[tries[i].k][tries[i].i - 1].up)) return run[0];
+  }
+  return null;
+}
+
+function say(s) { $("msg").textContent = s; }
+function shake(id) { var el = document.querySelector('[data-id="' + id + '"]'); if (!el) return; el.classList.remove("no"); void el.offsetWidth; el.classList.add("no"); }
+function cardEl(c, tag) {
+  var d = document.createElement(tag || "span");
+  if (!c.up) { d.className = "c down"; d.textContent = "$"; d.setAttribute("aria-label", "Face-down card"); return d; }
+  d.className = "c" + (red(c) ? " red" : "") + (last[cid(c)] ? " pop" : ""); d.dataset.id = cid(c);
+  var b = document.createElement("b"); b.textContent = rk(c); var i = document.createElement("i"); i.textContent = SYM[c.s]; var u = document.createElement("u"); u.textContent = SYM[c.s];
+  d.appendChild(b); d.appendChild(i); d.appendChild(u); d.setAttribute("aria-label", rk(c) + " of " + WORD[c.s]); return d;
+}
+function render() {
+  var sk = $("stock"); sk.textContent = "";
+  if (st.stock.length) sk.appendChild(cardEl({ up: false })); else sk.textContent = "↻";
+  sk.setAttribute("aria-label", st.stock.length ? "Draw a card, " + st.stock.length + " left" : "Turn the pile back over");
+  var w = $("waste"); w.textContent = "";
+  if (st.waste.length) { var wc = cardEl(st.waste[st.waste.length - 1], "button"); wc.addEventListener("click", function () { move({ t: "waste" }); }); w.appendChild(wc); }
+  SUITS.forEach(function (s) {
+    var f = $("f" + s), pile = st.found[s]; f.textContent = pile.length ? "" : SYM[s];
+    if (pile.length) { var fc = cardEl(pile[pile.length - 1], "button"); fc.addEventListener("click", function () { move({ t: "found", s: s }); }); f.appendChild(fc); }
+  });
+  var tb = $("tab"); tb.textContent = "";
+  st.tab.forEach(function (col, k) {
+    var d = document.createElement("div"); d.className = "col";
+    if (!col.length) { var e = document.createElement("div"); e.className = "slot"; e.textContent = "K"; e.setAttribute("aria-label", "Empty column"); d.appendChild(e); }
+    col.forEach(function (c, i) {
+      var el = cardEl(c, c.up ? "button" : "span");
+      if (c.up) el.addEventListener("click", function () { move({ t: "tab", k: k, i: i }); });
+      d.appendChild(el);
+    });
+    tb.appendChild(d);
+  });
+  last = {};
+  $("moves").textContent = moves; $("wins").textContent = wins; showTime();
+  $("undo").disabled = !hist.length; $("finish").disabled = !canAuto() || autoing;
+}
+
+$("stock").addEventListener("click", draw);
+$("undo").addEventListener("click", function () { if (!hist.length || autoing) return; st = JSON.parse(hist.pop()); moves++; say(""); render(); });
+$("hint").addEventListener("click", function () {
+  showAd("rewarded", "Watch to see a move", function () {
+    var c = hintMove();
+    if (c) { say("Try the " + rk(c) + " of " + WORD[c.s]); shake(cid(c)); } else say(st.stock.length || st.waste.length ? "Draw from the deck" : "No moves left. Undo or start a new game.");
+  });
+});
+$("finish").addEventListener("click", function () { if (canAuto()) autoFinish(); });
+$("newGame").addEventListener("click", deal);
+$("again").addEventListener("click", function () { $("won").hidden = true; showAd("interstitial", "", deal); });
+deal();
+})();
+</script>
+
+</body>
+</html>

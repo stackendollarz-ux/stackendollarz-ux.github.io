@@ -1,0 +1,404 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{box-sizing:border-box}body{margin:0}img{max-width:100%}[hidden]{display:none!important}.adbar{display:none!important}</style>
+<script>
+/* Website preview: no ads here, so ad breaks and "watch an ad" buttons continue right away. */
+window.StackBridge = { postMessage: function (raw) {
+  var m = {}; try { m = JSON.parse(raw); } catch (e) {}
+  setTimeout(function () {
+    if (m.type === "interstitial" && window.stackAdClosed) window.stackAdClosed();
+    if (m.type === "rewarded" && window.stackRewardEarned) window.stackRewardEarned();
+  }, 0);
+} };
+</script>
+</head>
+<body>
+<title>Stack Man</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&display=swap">
+<style>
+/* Layout: one screen. Coin bar, a wooden-walled maze where Stack Man (a walking gold dollar sign) collects copper coins and gold power coins while Bankruptcy Ghosts chase him, a direction pad on the wooden rack, ad banner space. Same family look as the other Stack a Dollar games; one dark look by choice. Score is counted in Stack a Dollar Coins. */
+:root {
+  color-scheme: dark;
+  --felt: #5E9E1B; --felt-deep: #3F7A12; --bar: #17240C; --well: #24380F; --ink: #FFFFFF; --muted: #D8E8C4;
+  --wood: #9A5A2E; --wood-deep: #6E3D1D; --gold: #F4B321; --gold-ink: #2A1B00;
+  --p1: #F4B321; --p2: #39B8F2; --p3: #F2456B; --p4: #F28C28; --p5: #A77BF5; --p6: #2EC4A0;
+  --card: #FBF8EE; --edge: #B9AE93; --black: #18140F; --red: #C4162E;
+  --font: 'Baloo 2', 'Trebuchet MS', 'Segoe UI', Arial, sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { background: var(--felt-deep); color: var(--ink); font-family: var(--font); font-size: 1rem; font-weight: 600; display: flex; flex-direction: column; overflow: hidden; -webkit-user-select: none; user-select: none; }
+button { font: inherit; color: inherit; cursor: pointer; border: none; background: none; padding: 0; }
+button:focus-visible { outline: 3px solid #FFFFFF; outline-offset: 2px; }
+.bar { padding-inline: 16px; padding-block: 8px; background: var(--bar); display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 2px 10px; }
+.brand { flex: 0 0 100%; text-align: center; font-weight: 800; font-size: 1.15rem; line-height: 1.1; color: var(--gold); }
+.brand span { color: var(--ink); }
+.side { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; line-height: 1.1; }
+.side.r { align-items: flex-end; }
+.side span { color: var(--muted); font-size: 0.85rem; }
+.side b { font-size: 1.7rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.goal { background: var(--gold); color: var(--gold-ink); border-radius: 10px; padding: 2px 16px; text-align: center; line-height: 1.05; }
+.goal b { display: block; font-size: 1.5rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.goal span { font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; }
+.new { border: 2px solid #4C6A2C; border-radius: 8px; min-height: 40px; padding: 0 10px; font-size: 0.9rem; }
+.stage { position: relative; flex: 1 1 0; min-height: 0; padding-inline: 16px; padding-block: 12px 8px; background: radial-gradient(ellipse at 50% 40%, var(--felt) 0%, var(--felt-deep) 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; overflow: hidden; }
+#msg { min-height: 1.4em; text-align: center; font-weight: 800; color: var(--gold); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7); max-width: 460px; }
+.rack { padding-inline: 16px; padding-block: 10px 12px; background: var(--wood); border-top: 6px solid var(--wood-deep); box-shadow: inset 0 10px 14px rgba(0, 0, 0, 0.25); }
+.tools { max-width: 440px; margin-inline: auto; display: grid; grid-template-columns: repeat(var(--n, 2), minmax(0, 1fr)); gap: 8px; }
+.tool { min-height: 48px; border-radius: 10px; background: var(--bar); font-weight: 800; line-height: 1.1; padding: 4px; }
+.tool small { display: block; font-size: 0.72rem; color: var(--muted); font-weight: 600; }
+.tool.gold { background: var(--gold); color: var(--gold-ink); }
+.tool.gold small { color: var(--gold-ink); }
+.tool:disabled { opacity: 0.45; cursor: default; }
+.adbar { background: var(--bar); padding-inline: 16px; padding-block: 6px; }
+.ad { width: min(320px, 100%); height: 50px; margin-inline: auto; display: flex; align-items: center; justify-content: center; border: 1px dashed #4C6A2C; border-radius: 6px; color: #8FA878; font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; }
+.ad.live { border-color: transparent; color: transparent; }
+.veil { position: fixed; inset: 0; z-index: 10; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(8, 20, 2, 0.78); }
+.box { background: var(--bar); border: 3px solid var(--gold); border-radius: 14px; padding: 18px; width: 100%; max-width: 340px; display: flex; flex-direction: column; gap: 10px; text-align: center; }
+.box h2 { margin: 0; font-size: 1.5rem; font-weight: 800; color: var(--gold); line-height: 1.1; text-wrap: balance; }
+.box p { margin: 0; color: var(--muted); }
+.box .big { font-size: 2.6rem; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+.go { background: var(--gold); color: var(--gold-ink); border-radius: 10px; min-height: 48px; font-weight: 800; font-size: 1.1rem; }
+.go.alt { background: transparent; color: var(--ink); border: 2px solid #4C6A2C; }
+.go:disabled { opacity: 0.55; cursor: default; }
+.adfake { height: 180px; border: 1px dashed #4C6A2C; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #8FA878; letter-spacing: 0.08em; text-transform: uppercase; font-size: 0.85rem; }
+
+canvas { display: block; touch-action: none; border-radius: 10px; box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4); }
+.pad { display: grid; grid-template: repeat(2, 48px) / repeat(3, 64px); gap: 6px; justify-content: center; }
+.pad button { background: var(--bar); border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+.pad button:active { background: var(--gold); color: var(--gold-ink); }
+.pad svg { width: 24px; height: 24px; }
+#up { grid-area: 1 / 2; } #left { grid-area: 2 / 1; } #down { grid-area: 2 / 2; } #right { grid-area: 2 / 3; }
+#pause { grid-area: 1 / 3; font-size: 0.85rem; font-weight: 800; }
+#lives { color: var(--gold); letter-spacing: 0.06em; }
+</style>
+
+<div class="bar">
+  <div class="brand">Stack a Dollar <span>Stack Man</span></div>
+  <div class="side"><span>Coins</span><b id="score">0</b></div>
+  <div class="goal"><b id="level">1</b><span>Level</span></div>
+  <div class="side r"><span>Lives</span><b id="lives">$$$</b></div>
+</div>
+<div class="stage" id="stage">
+  <canvas id="cv" aria-label="Maze. Swipe or use the arrows to move Stack Man."></canvas>
+  <div id="msg" role="status" aria-live="polite">Grab the coins. Gold power coins let you chase the Bankruptcy Ghosts!</div>
+</div>
+<div class="rack"><div class="pad">
+  <button id="up" aria-label="Up"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 15l7-7 7 7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+  <button id="pause" aria-label="Pause">Pause</button>
+  <button id="left" aria-label="Left"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+  <button id="down" aria-label="Down"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9l7 7 7-7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+  <button id="right" aria-label="Right"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+</div></div>
+<div class="adbar"><div class="ad" id="adBanner">Ad space</div></div>
+<div class="veil" id="adBreak" hidden><div class="box">
+  <p id="adLabel">Ad break</p>
+  <div class="adfake">Ad shows here in the app</div>
+  <button class="go" id="adGo" disabled>Continue</button>
+</div></div>
+<div class="veil" id="won" hidden><div class="box">
+  <h2 id="wonT">Level 1 cleared!</h2>
+  <p id="wonP"></p>
+  <button class="go" id="next">Next level</button>
+</div></div>
+<div class="veil" id="lost" hidden><div class="box">
+  <h2>Bankrupt!</h2>
+  <p id="lostP"></p>
+  <button class="go" id="rescue">Bailout: extra life<br><small>Watch an ad</small></button>
+  <button class="go alt" id="retry">Start over</button>
+</div></div>
+
+<script>
+(function () {
+"use strict";
+var $ = function (id) { return document.getElementById(id); }, GAME = "stackman";
+/* ---------- app bridge: the phone app connects these to AdMob and rewards ---------- */
+function post(o) { o.game = GAME; try { if (window.StackBridge && window.StackBridge.postMessage) { window.StackBridge.postMessage(JSON.stringify(o)); return true; } } catch (e) {} return false; }
+function showAd(kind, label, done) {
+  if (post({ type: kind })) { window[kind === "rewarded" ? "stackRewardEarned" : "stackAdClosed"] = function () { done(); }; return; }
+  var v = $("adBreak"), b = $("adGo"), n = kind === "rewarded" ? 5 : 3; $("adLabel").textContent = label || "Ad break";
+  v.hidden = false; b.disabled = true; b.textContent = "Continue in " + n;
+  var iv = setInterval(function () { n--; if (n > 0) b.textContent = "Continue in " + n; else { clearInterval(iv); b.disabled = false; b.textContent = "Continue"; b.focus(); } }, 1000);
+  b.onclick = function () { v.hidden = true; done(); };
+}
+if (post({ type: "banner" })) $("adBanner").classList.add("live");
+function store(k, v) { try { if (v === undefined) return localStorage.getItem("sad-" + GAME + "-" + k); localStorage.setItem("sad-" + GAME + "-" + k, v); } catch (e) { return null; } }
+
+var MAPS = [[
+  "###############",
+  "#o.....#.....o#",
+  "#.##.#.#.#.##.#",
+  "#.............#",
+  "#.##.#####.##.#",
+  "#....#...#....#",
+  "####.##.##.####",
+  "#.....GGG.....#",
+  "#.##.#####.##.#",
+  "...............",
+  "###.#.###.#.###",
+  "#.....#.#.....#",
+  "#.###.#.#.###.#",
+  "#o.....P.....o#",
+  "#.##.#####.##.#",
+  "#......#......#",
+  "###############"
+], [
+  "###############",
+  "#.............#",
+  "#o#.###.###.#o#",
+  "#.#.........#.#",
+  "#...##.#.##...#",
+  "###.#..#..#.###",
+  "#...#.###.#...#",
+  "#.#...GGG...#.#",
+  "#.#.#######.#.#",
+  "...............",
+  "#.###.#.#.###.#",
+  "#.....#.#.....#",
+  "###.#.....#.###",
+  "#o..#..P..#..o#",
+  "#.###.###.###.#",
+  "#.............#",
+  "###############"
+], [
+  "###############",
+  "#o....#.#....o#",
+  "#.###.#.#.###.#",
+  "#.............#",
+  "##.#.#####.#.##",
+  "#..#...#...#..#",
+  "#.####.#.####.#",
+  "#.....GGG.....#",
+  "#.#.###.###.#.#",
+  "...............",
+  "#.##.#.#.#.##.#",
+  "#....#...#....#",
+  "#.##.#####.##.#",
+  "#o.....P.....o#",
+  "#.###.#.#.###.#",
+  "#.....#.#.....#",
+  "###############"
+]];
+var W = 15, H = 17, TUN = 9, DIR = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] }, OPP = { up: "down", down: "up", left: "right", right: "left" };
+var cv = $("cv"), ctx = cv.getContext("2d"), cs = 20, dpr = 1;
+var grid, coins, eaten, player, ghosts, bank, lives, level = 1, scared = 0, chain = 0, bonus = null, running = false, paused = false, lastT = 0, clock = 0, best = +store("bestcoins") || 0;
+var GHOSTS = [{ name: "Overdraft", col: "#E04A5F" }, { name: "Late Fee", col: "#9B6BE0" }, { name: "Repo", col: "#E8873A" }];
+
+function wall(x, y) { if (y === TUN && (x < 0 || x >= W)) return false; return x < 0 || y < 0 || x >= W || y >= H || grid[y][x] === "#"; }
+function setup(keepBank) {
+  grid = MAPS[(level - 1) % MAPS.length].map(function (r) { return r.split(""); }); coins = 0; eaten = 0; ghosts = []; bonus = null;
+  grid.forEach(function (row, y) { row.forEach(function (ch, x) {
+    if (ch === "." || ch === "o") coins++;
+    if (ch === "P") { player = mk(x, y); grid[y][x] = " "; }
+    if (ch === "G") { var g = mk(x, y), k = ghosts.length; g.name = GHOSTS[k].name; g.col = GHOSTS[k].col; g.kind = k; ghosts.push(g); grid[y][x] = " "; }
+  }); });
+  if (!keepBank) { bank = 0; lives = 3; }
+  resetPositions(); hud();
+}
+function mk(x, y) { return { x: x, y: y, tx: x, ty: y, p: 0, d: null, nd: null, moving: false, home: [x, y] }; }
+function resetPositions() { [player].concat(ghosts).forEach(function (e, k) { e.x = e.tx = e.home[0]; e.y = e.ty = e.home[1]; e.p = 0; e.d = e.nd = null; e.moving = false; e.wait = k ? (k - 1) * 2.5 + 0.6 : 0; }); scared = 0; }
+function speedP() { return 5.4 + Math.min(1.6, level * 0.12); }
+function speedG(g) { return g.eyes ? 9 : scared > 0 ? 3 : 4.2 + Math.min(2, level * 0.22); }
+
+function begin(e, d) { e.d = d; e.tx = e.x + DIR[d][0]; e.ty = e.y + DIR[d][1]; e.moving = true; }
+function step(e, dt, sp, choose) {
+  if (!e.moving) { var d0 = choose(e); if (!d0) return; begin(e, d0); e.p = 0; }
+  e.p += sp * dt;
+  while (e.p >= 1) {
+    e.x = e.tx; e.y = e.ty; e.p -= 1; e.moving = false;
+    if (e.x < 0) e.x = W - 1; if (e.x >= W) e.x = 0;
+    arrive(e);
+    var d = choose(e);
+    if (!d) { e.p = 0; return; }
+    begin(e, d);
+  }
+}
+function arrive(e) {
+  if (e !== player) { if (e.eyes && e.x === e.home[0] && e.y === e.home[1]) e.eyes = false; return; }
+  var c = grid[e.y][e.x];
+  if (c === "." || c === "o") {
+    grid[e.y][e.x] = " "; coins--; eaten++;
+    if (c === "o") { bank += 25; scared = Math.max(4, 8 - level * 0.4); chain = 0; say("Power coin! +25 coins. The ghosts are scared. Go get them!"); }
+    else bank += 1;
+    if (eaten === 50 || eaten === 110) bonus = { x: player.home[0], y: player.home[1], t: 9 };
+    hud(); if (!coins) levelDone();
+  }
+  if (bonus && e.x === bonus.x && e.y === bonus.y) { bank += 100; bonus = null; say("Gold bar! +100 coins"); hud(); }
+}
+function choosePlayer(e) {
+  if (e.nd && !wall(e.x + DIR[e.nd][0], e.y + DIR[e.nd][1])) return e.nd;
+  if (e.d && !wall(e.x + DIR[e.d][0], e.y + DIR[e.d][1])) return e.d;
+  return null;
+}
+function target(g) {
+  if (g.eyes) return g.home;
+  if (g.kind === 1 && player.d) return [player.x + DIR[player.d][0] * 4, player.y + DIR[player.d][1] * 4];
+  if (g.kind === 2 && Math.abs(g.x - player.x) + Math.abs(g.y - player.y) < 6) return [1, H - 2];
+  return [player.x, player.y];
+}
+function chooseGhost(g) {
+  if (g.wait > 0) return null;
+  var opts = Object.keys(DIR).filter(function (d) { var x = g.x + DIR[d][0], y = g.y + DIR[d][1]; return !wall(x, y) && x >= 0 && x < W; });
+  if (opts.length > 1 && g.d) opts = opts.filter(function (d) { return d !== OPP[g.d]; });
+  if (!opts.length) return null;
+  if (!g.eyes && Math.random() < (scared > 0 ? 0.35 : 0.12)) return opts[Math.floor(Math.random() * opts.length)];
+  var t = target(g), flee = scared > 0 && !g.eyes;
+  opts.sort(function (a, b) { var da = d2(g, a, t), db = d2(g, b, t); return flee ? db - da : da - db; });
+  return opts[0];
+}
+function d2(g, d, t) { var x = g.x + DIR[d][0], y = g.y + DIR[d][1]; return (x - t[0]) * (x - t[0]) + (y - t[1]) * (y - t[1]); }
+function pos(e) { var t = e.moving ? Math.min(e.p, 1) : 0; return [e.x + (e.tx - e.x) * t, e.y + (e.ty - e.y) * t]; }
+function setDir(d) {
+  if (!running) return;
+  player.nd = d;
+  if (player.moving && d === OPP[player.d]) { var x = player.x, y = player.y; player.x = player.tx; player.y = player.ty; player.tx = x; player.ty = y; player.p = 1 - player.p; player.d = d; }
+}
+
+function loop(t) {
+  if (!running) return;
+  var dt = Math.min(0.05, (t - lastT) / 1000 || 0); lastT = t;
+  if (!paused) {
+    clock += dt;
+    if (scared > 0) { scared -= dt; if (scared <= 0) say(""); }
+    if (bonus) { bonus.t -= dt; if (bonus.t <= 0) bonus = null; }
+    step(player, dt, speedP(), choosePlayer);
+    ghosts.forEach(function (g) { if (g.wait > 0) g.wait -= dt; step(g, dt, speedG(g), chooseGhost); });
+    var pp = pos(player);
+    for (var i = 0; i < ghosts.length; i++) {
+      var g = ghosts[i]; if (g.eyes) continue;
+      var gp = pos(g);
+      if (Math.abs(gp[0] - pp[0]) + Math.abs(gp[1] - pp[1]) < 0.7) {
+        if (scared > 0) { chain++; var pay = 50 * chain; bank += pay; g.eyes = true; say(g.name + " paid off! +" + pay + " coins"); hud(); }
+        else { caught(g); return; }
+      }
+    }
+  }
+  draw();
+  if (running) requestAnimationFrame(loop);
+}
+function caught(g) {
+  lives--; hud(); running = false; draw();
+  if (lives > 0) { say(g.name + " got you! Get ready..."); setTimeout(function () { resetPositions(); go(); say(""); }, 1300); return; }
+  if (bank > best) { best = bank; store("bestcoins", best); }
+  post({ type: "gameOver", score: bank, level: level });
+  $("lostP").textContent = g.name + " got you. You banked " + money(bank) + ". Best " + money(best) + ".";
+  $("lost").hidden = false; $("rescue").focus();
+}
+function levelDone() {
+  running = false; post({ type: "levelComplete", level: level, score: bank });
+  $("wonT").textContent = "Level " + level + " cleared!"; $("wonP").textContent = "You stacked " + money(bank) + ".";
+  setTimeout(function () { $("won").hidden = false; $("next").focus(); }, 300);
+}
+function go() { running = true; paused = false; $("pause").textContent = "Pause"; lastT = performance.now(); requestAnimationFrame(loop); }
+
+function money(c) { return c.toLocaleString("en-US") + (c === 1 ? " coin" : " coins"); }
+function say(s) { $("msg").textContent = s; }
+function hud() { $("score").textContent = bank.toLocaleString("en-US"); $("level").textContent = level; var h = ""; for (var i = 0; i < lives; i++) h += "$"; $("lives").textContent = h || "-"; $("lives").setAttribute("aria-label", lives + " lives"); }
+function size() {
+  var st = $("stage"), w = st.clientWidth - 32, h = st.clientHeight - 50;
+  cs = Math.max(14, Math.floor(Math.min(w / W, h / H))); dpr = window.devicePixelRatio || 1;
+  cv.style.width = cs * W + "px"; cv.style.height = cs * H + "px"; cv.width = cs * W * dpr; cv.height = cs * H * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0); draw();
+}
+function rr(x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+function text(s, x, y, px, col) { ctx.fillStyle = col; ctx.font = "800 " + Math.round(px) + "px 'Baloo 2', sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(s, x, y); }
+
+function drawCent(px, py) {
+  ctx.fillStyle = "#8A4A1C"; ctx.beginPath(); ctx.arc(px + cs / 2, py + cs / 2 + 1, cs * 0.15, 0, 7); ctx.fill();
+  ctx.fillStyle = "#D98A4E"; ctx.beginPath(); ctx.arc(px + cs / 2, py + cs / 2, cs * 0.15, 0, 7); ctx.fill();
+}
+function drawBill(px, py) {
+  var pulse = 1 + Math.sin(clock * 6) * 0.08, r = cs * 0.34 * pulse, cx = px + cs / 2, cy = py + cs / 2;
+  ctx.fillStyle = "#A87700"; ctx.beginPath(); ctx.arc(cx, cy + cs * 0.05, r, 0, 7); ctx.fill();
+  ctx.fillStyle = "#F4B321"; ctx.beginPath(); ctx.arc(cx, cy, r, 0, 7); ctx.fill();
+  ctx.strokeStyle = "#FFD666"; ctx.lineWidth = Math.max(1, cs * 0.05); ctx.beginPath(); ctx.arc(cx, cy, r * 0.72, 0, 7); ctx.stroke();
+  text("$", cx, cy + cs * 0.02, cs * 0.4, "#2A1B00");
+}
+function drawBar(b) {
+  var px = b.x * cs, py = b.y * cs;
+  if (b.t < 2 && Math.floor(b.t * 8) % 2) return;
+  ctx.fillStyle = "#A87700"; ctx.beginPath(); ctx.moveTo(px + cs * 0.06, py + cs * 0.78); ctx.lineTo(px + cs * 0.94, py + cs * 0.78); ctx.lineTo(px + cs * 0.78, py + cs * 0.3); ctx.lineTo(px + cs * 0.22, py + cs * 0.3); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = "#FFD666"; ctx.beginPath(); ctx.moveTo(px + cs * 0.14, py + cs * 0.72); ctx.lineTo(px + cs * 0.86, py + cs * 0.72); ctx.lineTo(px + cs * 0.74, py + cs * 0.34); ctx.lineTo(px + cs * 0.26, py + cs * 0.34); ctx.closePath(); ctx.fill();
+}
+function drawGhost(g) {
+  var p = pos(g), px = p[0] * cs, py = p[1] * cs, wob = Math.sin(clock * 6 + g.kind) * cs * 0.04;
+  if (g.eyes) { eyes(px + cs / 2, py + cs * 0.45, g, "#FFFFFF"); return; }
+  var flash = scared > 0 && scared < 2 && Math.floor(scared * 6) % 2, paid = scared > 0;
+  var body = paid ? (flash ? "#E8DFC2" : "#7C8A99") : g.col;
+  var x0 = px + cs * 0.12, x1 = px + cs * 0.88, y0 = py + cs * 0.1 + wob, y1 = py + cs * 0.86 + wob;
+  ctx.fillStyle = "rgba(0,0,0,0.25)"; ctx.beginPath(); ctx.ellipse(px + cs / 2, py + cs * 0.95, cs * 0.3, cs * 0.06, 0, 0, 7); ctx.fill();
+  ctx.fillStyle = body; ctx.beginPath();
+  ctx.moveTo(x0, y0); ctx.lineTo(x1 - cs * 0.18, y0); ctx.lineTo(x1, y0 + cs * 0.18); ctx.lineTo(x1, y1);
+  var teeth = 4, tw = (x1 - x0) / teeth;
+  for (var i = teeth; i > 0; i--) { ctx.lineTo(x0 + (i - 0.5) * tw, y1 - cs * 0.14); ctx.lineTo(x0 + (i - 1) * tw, y1); }
+  ctx.closePath(); ctx.fill();
+  ctx.fillStyle = "rgba(255,255,255,0.35)"; ctx.beginPath(); ctx.moveTo(x1 - cs * 0.18, y0); ctx.lineTo(x1 - cs * 0.18, y0 + cs * 0.18); ctx.lineTo(x1, y0 + cs * 0.18); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = "rgba(255,255,255,0.3)"; ctx.fillRect(x0 + cs * 0.1, y0 + cs * 0.5, cs * 0.5, cs * 0.05);
+  if (paid) text("PAID", px + cs / 2, y0 + cs * 0.52, cs * 0.26, "#17240C");
+  else { ctx.save(); ctx.translate(px + cs / 2, y0 + cs * 0.56); ctx.rotate(-0.25); text("BK", 0, 0, cs * 0.24, "#FFFFFF"); ctx.restore(); }
+  eyes(px + cs / 2, y0 + cs * 0.24, g, paid ? "#FFFFFF" : "#FFFFFF", !paid);
+}
+function eyes(cx, cy, g, white, angry) {
+  var dx = g.d ? DIR[g.d][0] * cs * 0.04 : 0, dy = g.d ? DIR[g.d][1] * cs * 0.04 : 0;
+  [-1, 1].forEach(function (s) {
+    var ex = cx + s * cs * 0.15;
+    ctx.fillStyle = white; ctx.beginPath(); ctx.arc(ex, cy, cs * 0.09, 0, 7); ctx.fill();
+    ctx.fillStyle = "#18140F"; ctx.beginPath(); ctx.arc(ex + dx, cy + dy, cs * 0.045, 0, 7); ctx.fill();
+    if (angry) { ctx.strokeStyle = "#18140F"; ctx.lineWidth = Math.max(1.5, cs * 0.06); ctx.beginPath(); ctx.moveTo(ex - s * cs * 0.1, cy - cs * 0.14); ctx.lineTo(ex + s * cs * 0.06, cy - cs * 0.08); ctx.stroke(); }
+  });
+}
+function drawStackMan() {
+  var q = pos(player), cx = q[0] * cs + cs / 2, cy = q[1] * cs + cs / 2, walk = player.moving ? Math.sin(clock * 18) : 0;
+  var face = player.d === "left" ? -1 : player.d === "right" ? 1 : 0, lean = face * 0.12;
+  ctx.strokeStyle = "#2A1B00"; ctx.lineWidth = Math.max(1.5, cs * 0.08); ctx.lineCap = "round";
+  ctx.beginPath(); ctx.moveTo(cx - cs * 0.1, cy + cs * 0.28); ctx.lineTo(cx - cs * 0.14 - walk * cs * 0.08, cy + cs * 0.46); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx + cs * 0.1, cy + cs * 0.28); ctx.lineTo(cx + cs * 0.14 + walk * cs * 0.08, cy + cs * 0.46); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx - cs * 0.2, cy + cs * 0.02); ctx.lineTo(cx - cs * 0.42, cy - cs * 0.08 + walk * cs * 0.08); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx + cs * 0.2, cy + cs * 0.02); ctx.lineTo(cx + cs * 0.42, cy - cs * 0.08 - walk * cs * 0.08); ctx.stroke();
+  ctx.save(); ctx.translate(cx, cy); ctx.rotate(lean);
+  ctx.font = "800 " + Math.round(cs * 1.05) + "px 'Baloo 2', 'Trebuchet MS', sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.lineJoin = "round"; ctx.lineWidth = Math.max(2, cs * 0.14); ctx.strokeStyle = "#6B4A00"; ctx.strokeText("$", 0, cs * 0.04);
+  ctx.fillStyle = "#F4B321"; ctx.fillText("$", 0, cs * 0.04);
+  [-1, 1].forEach(function (s) {
+    var ex = s * cs * 0.11 + face * cs * 0.05, ey = -cs * 0.12;
+    ctx.fillStyle = "#FFFFFF"; ctx.beginPath(); ctx.arc(ex, ey, cs * 0.085, 0, 7); ctx.fill();
+    ctx.fillStyle = "#18140F"; ctx.beginPath(); ctx.arc(ex + face * cs * 0.03 + (player.d === "up" ? 0 : 0), ey + (player.d === "up" ? -cs * 0.03 : player.d === "down" ? cs * 0.03 : 0), cs * 0.042, 0, 7); ctx.fill();
+  });
+  ctx.strokeStyle = "#2A1B00"; ctx.lineWidth = Math.max(1, cs * 0.05); ctx.beginPath(); ctx.arc(face * cs * 0.05, cs * 0.06, cs * 0.1, 0.2, Math.PI - 0.2); ctx.stroke();
+  ctx.restore();
+}
+function draw() {
+  if (!grid) return;
+  ctx.fillStyle = "#17240C"; ctx.fillRect(0, 0, W * cs, H * cs);
+  for (var y = 0; y < H; y++) for (var x = 0; x < W; x++) {
+    var c = grid[y][x], px = x * cs, py = y * cs;
+    if (c === "#") { ctx.fillStyle = "#9A5A2E"; rr(px + 1, py + 1, cs - 2, cs - 2, cs * 0.22); ctx.fill(); ctx.fillStyle = "#6E3D1D"; ctx.fillRect(px + 2, py + cs * 0.7, cs - 4, cs * 0.22); }
+    else if (c === ".") drawCent(px, py);
+    else if (c === "o") drawBill(px, py);
+  }
+  if (bonus) drawBar(bonus);
+  ghosts.forEach(drawGhost);
+  if (lives > 0 || running) drawStackMan();
+  if (paused) { ctx.fillStyle = "rgba(8,20,2,0.6)"; ctx.fillRect(0, 0, W * cs, H * cs); text("Paused", W * cs / 2, H * cs / 2, cs * 1.4, "#F4B321"); }
+}
+
+["up", "down", "left", "right"].forEach(function (d) { $(d).addEventListener("pointerdown", function (e) { e.preventDefault(); setDir(d); }); $(d).addEventListener("click", function (e) { if (e.detail === 0) setDir(d); }); });
+document.addEventListener("keydown", function (e) { var m = { ArrowUp: "up", ArrowDown: "down", ArrowLeft: "left", ArrowRight: "right" }[e.key]; if (m && running) { e.preventDefault(); setDir(m); } });
+var sx = 0, sy = 0;
+$("stage").addEventListener("pointerdown", function (e) { sx = e.clientX; sy = e.clientY; });
+$("stage").addEventListener("pointermove", function (e) { if (!e.buttons && e.pointerType === "mouse") return; var dx = e.clientX - sx, dy = e.clientY - sy; if (Math.abs(dx) + Math.abs(dy) < 24) return; setDir(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? "right" : "left") : (dy > 0 ? "down" : "up")); sx = e.clientX; sy = e.clientY; });
+$("pause").addEventListener("click", function () { if (!running) return; paused = !paused; $("pause").textContent = paused ? "Play" : "Pause"; if (!paused) lastT = performance.now(); draw(); });
+$("next").addEventListener("click", function () { $("won").hidden = true; level++; var cont = function () { setup(true); go(); say("Level " + level + ". The ghosts are faster now."); }; if (level % 2 === 0) showAd("interstitial", "", cont); else cont(); });
+$("rescue").addEventListener("click", function () { $("lost").hidden = true; showAd("rewarded", "Watch for a bailout", function () { lives = 1; hud(); resetPositions(); go(); say("Bailout! You're back in business."); }); });
+$("retry").addEventListener("click", function () { $("lost").hidden = true; showAd("interstitial", "", function () { level = 1; setup(false); go(); }); });
+document.addEventListener("visibilitychange", function () { if (document.hidden && running && !paused) $("pause").click(); });
+window.addEventListener("resize", size);
+setup(false); size(); go();
+})();
+</script>
+
+</body>
+</html>

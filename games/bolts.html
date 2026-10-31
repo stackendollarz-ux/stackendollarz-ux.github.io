@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{box-sizing:border-box}body{margin:0}img{max-width:100%}[hidden]{display:none!important}.adbar{display:none!important}</style>
+<script>
+/* Website preview: no ads here, so ad breaks and "watch an ad" buttons continue right away. */
+window.StackBridge = { postMessage: function (raw) {
+  var m = {}; try { m = JSON.parse(raw); } catch (e) {}
+  setTimeout(function () {
+    if (m.type === "interstitial" && window.stackAdClosed) window.stackAdClosed();
+    if (m.type === "rewarded" && window.stackRewardEarned) window.stackRewardEarned();
+  }, 0);
+} };
+</script>
+</head>
+<body>
+<title>Stack a Dollar Bolts</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&display=swap">
+<style>
+/* Layout: one screen. Level bar, two color boxes waiting for bolts plus a spare tray, then a board of stacked planks held by bolts on the felt; tools and ad banner space at the bottom. Same family look as the other Stack a Dollar games; one dark look by choice. */
+:root {
+  color-scheme: dark;
+  --felt: #5E9E1B; --felt-deep: #3F7A12; --bar: #17240C; --well: #24380F; --ink: #FFFFFF; --muted: #D8E8C4;
+  --wood: #9A5A2E; --wood-deep: #6E3D1D; --gold: #F4B321; --gold-ink: #2A1B00;
+  --p1: #F4B321; --p2: #39B8F2; --p3: #F2456B; --p4: #F28C28; --p5: #A77BF5; --p6: #2EC4A0;
+  --card: #FBF8EE; --edge: #B9AE93; --black: #18140F; --red: #C4162E;
+  --font: 'Baloo 2', 'Trebuchet MS', 'Segoe UI', Arial, sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { background: var(--felt-deep); color: var(--ink); font-family: var(--font); font-size: 1rem; font-weight: 600; display: flex; flex-direction: column; overflow: hidden; -webkit-user-select: none; user-select: none; }
+button { font: inherit; color: inherit; cursor: pointer; border: none; background: none; padding: 0; }
+button:focus-visible { outline: 3px solid #FFFFFF; outline-offset: 2px; }
+.bar { padding-inline: 16px; padding-block: 8px; background: var(--bar); display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 2px 10px; }
+.brand { flex: 0 0 100%; text-align: center; font-weight: 800; font-size: 1.15rem; line-height: 1.1; color: var(--gold); }
+.brand span { color: var(--ink); }
+.side { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; line-height: 1.1; }
+.side.r { align-items: flex-end; }
+.side span { color: var(--muted); font-size: 0.85rem; }
+.side b { font-size: 1.7rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.goal { background: var(--gold); color: var(--gold-ink); border-radius: 10px; padding: 2px 16px; text-align: center; line-height: 1.05; }
+.goal b { display: block; font-size: 1.5rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.goal span { font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; }
+.new { border: 2px solid #4C6A2C; border-radius: 8px; min-height: 40px; padding: 0 10px; font-size: 0.9rem; }
+.stage { position: relative; flex: 1 1 0; min-height: 0; padding-inline: 16px; padding-block: 12px 8px; background: radial-gradient(ellipse at 50% 40%, var(--felt) 0%, var(--felt-deep) 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; overflow: hidden; }
+#msg { min-height: 1.4em; text-align: center; font-weight: 800; color: var(--gold); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7); max-width: 460px; }
+.rack { padding-inline: 16px; padding-block: 10px 12px; background: var(--wood); border-top: 6px solid var(--wood-deep); box-shadow: inset 0 10px 14px rgba(0, 0, 0, 0.25); }
+.tools { max-width: 440px; margin-inline: auto; display: grid; grid-template-columns: repeat(var(--n, 2), minmax(0, 1fr)); gap: 8px; }
+.tool { min-height: 48px; border-radius: 10px; background: var(--bar); font-weight: 800; line-height: 1.1; padding: 4px; }
+.tool small { display: block; font-size: 0.72rem; color: var(--muted); font-weight: 600; }
+.tool.gold { background: var(--gold); color: var(--gold-ink); }
+.tool.gold small { color: var(--gold-ink); }
+.tool:disabled { opacity: 0.45; cursor: default; }
+.adbar { background: var(--bar); padding-inline: 16px; padding-block: 6px; }
+.ad { width: min(320px, 100%); height: 50px; margin-inline: auto; display: flex; align-items: center; justify-content: center; border: 1px dashed #4C6A2C; border-radius: 6px; color: #8FA878; font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; }
+.ad.live { border-color: transparent; color: transparent; }
+.veil { position: fixed; inset: 0; z-index: 10; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(8, 20, 2, 0.78); }
+.box { background: var(--bar); border: 3px solid var(--gold); border-radius: 14px; padding: 18px; width: 100%; max-width: 340px; display: flex; flex-direction: column; gap: 10px; text-align: center; }
+.box h2 { margin: 0; font-size: 1.5rem; font-weight: 800; color: var(--gold); line-height: 1.1; text-wrap: balance; }
+.box p { margin: 0; color: var(--muted); }
+.box .big { font-size: 2.6rem; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+.go { background: var(--gold); color: var(--gold-ink); border-radius: 10px; min-height: 48px; font-weight: 800; font-size: 1.1rem; }
+.go.alt { background: transparent; color: var(--ink); border: 2px solid #4C6A2C; }
+.go:disabled { opacity: 0.55; cursor: default; }
+.adfake { height: 180px; border: 1px dashed #4C6A2C; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #8FA878; letter-spacing: 0.08em; text-transform: uppercase; font-size: 0.85rem; }
+
+.top { display: flex; gap: 10px; align-items: stretch; flex-wrap: wrap; justify-content: center; }
+.boxes { display: flex; gap: 8px; }
+.cbox { width: 86px; height: 46px; border-radius: 10px; background: var(--c); box-shadow: inset 0 -5px 0 rgba(0, 0, 0, 0.25); display: flex; align-items: center; justify-content: center; gap: 6px; }
+.cbox i, .spare i { width: 20px; height: 20px; border-radius: 50%; background: rgba(0, 0, 0, 0.28); }
+.cbox i.on { background: #FFFFFF; box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.25); }
+.spare { display: flex; gap: 5px; padding: 6px 8px; border-radius: 10px; background: var(--bar); align-items: center; }
+.spare i.on { background: var(--c); box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.3); }
+.spare i.extra { outline: 2px dashed var(--gold); outline-offset: 1px; }
+#board { position: relative; flex: none; background: var(--well); border-radius: 12px; box-shadow: inset 0 4px 10px rgba(0, 0, 0, 0.35); }
+.plank { position: absolute; border-radius: 12px; background: var(--c); box-shadow: inset 0 -6px 0 rgba(0, 0, 0, 0.22), inset 0 3px 0 rgba(255, 255, 255, 0.25), 0 4px 8px rgba(0, 0, 0, 0.35); opacity: 0.94; transition: transform 0.5s ease-in, opacity 0.5s; }
+.plank.drop { transform: translateY(120px) rotate(14deg); opacity: 0; }
+.bolt { position: absolute; width: var(--bz); height: var(--bz); transform: translate(-50%, -50%); border-radius: 50%; background: var(--c); box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.3), 0 0 0 3px rgba(255, 255, 255, 0.85); display: flex; align-items: center; justify-content: center; }
+.bolt::before, .bolt::after { content: ""; position: absolute; width: 52%; height: 14%; border-radius: 2px; background: rgba(0, 0, 0, 0.45); }
+.bolt::after { transform: rotate(90deg); }
+.bolt.no { animation: shake 0.3s; }
+@keyframes shake { 25% { translate: -3px 0; } 75% { translate: 3px 0; } }
+.hole { position: absolute; width: calc(var(--bz) * 0.7); height: calc(var(--bz) * 0.7); transform: translate(-50%, -50%); border-radius: 50%; background: rgba(0, 0, 0, 0.35); }
+@media (prefers-reduced-motion: reduce) { .plank { transition: opacity 0.2s; } .plank.drop { transform: none; } .bolt.no { animation: none; } }
+</style>
+
+<div class="bar">
+  <div class="brand">Stack a Dollar <span>Bolts</span></div>
+  <div class="side"><span>Bolts left</span><b id="left">0</b></div>
+  <div class="goal"><b id="level">1</b><span>Level</span></div>
+  <div class="side r"><span>Planks left</span><b id="planks">0</b></div>
+</div>
+<div class="stage">
+  <div class="top">
+    <div class="boxes" id="boxes" aria-label="Color boxes"></div>
+    <div class="spare" id="spare" aria-label="Spare tray"></div>
+  </div>
+  <div id="msg" role="status" aria-live="polite">Tap a bolt that isn't covered. Fill each box with 3 bolts of its color.</div>
+  <div id="board" aria-label="Planks"></div>
+</div>
+<div class="rack"><div class="tools">
+  <button class="tool" id="restart">Restart</button>
+  <button class="tool gold" id="extra">+ Spare slot<small>Watch an ad</small></button>
+</div></div>
+<div class="adbar"><div class="ad" id="adBanner">Ad space</div></div>
+<div class="veil" id="adBreak" hidden><div class="box">
+  <p id="adLabel">Ad break</p>
+  <div class="adfake">Ad shows here in the app</div>
+  <button class="go" id="adGo" disabled>Continue</button>
+</div></div>
+<div class="veil" id="won" hidden><div class="box">
+  <h2 id="wonT">Level 1 done!</h2>
+  <p>Every plank is down.</p>
+  <button class="go" id="next">Next level</button>
+</div></div>
+<div class="veil" id="lost" hidden><div class="box">
+  <h2>Spare tray is full</h2>
+  <p>Watch an ad to add a spare slot and keep going.</p>
+  <button class="go" id="rescue">Keep going</button>
+  <button class="go alt" id="retry">Try again</button>
+</div></div>
+
+<script>
+(function () {
+"use strict";
+var $ = function (id) { return document.getElementById(id); }, GAME = "bolts";
+/* ---------- app bridge: the phone app connects these to AdMob and rewards ---------- */
+function post(o) { o.game = GAME; try { if (window.StackBridge && window.StackBridge.postMessage) { window.StackBridge.postMessage(JSON.stringify(o)); return true; } } catch (e) {} return false; }
+function showAd(kind, label, done) {
+  if (post({ type: kind })) { window[kind === "rewarded" ? "stackRewardEarned" : "stackAdClosed"] = function () { done(); }; return; }
+  var v = $("adBreak"), b = $("adGo"), n = kind === "rewarded" ? 5 : 3; $("adLabel").textContent = label || "Ad break";
+  v.hidden = false; b.disabled = true; b.textContent = "Continue in " + n;
+  var iv = setInterval(function () { n--; if (n > 0) b.textContent = "Continue in " + n; else { clearInterval(iv); b.disabled = false; b.textContent = "Continue"; b.focus(); } }, 1000);
+  b.onclick = function () { v.hidden = true; done(); };
+}
+if (post({ type: "banner" })) $("adBanner").classList.add("live");
+function store(k, v) { try { if (v === undefined) return localStorage.getItem("sad-" + GAME + "-" + k); localStorage.setItem("sad-" + GAME + "-" + k, v); } catch (e) { return null; } }
+
+var COLORS = ["--p1", "--p2", "--p3", "--p4", "--p5", "--p6"], CNAME = ["gold", "blue", "pink", "orange", "purple", "teal"];
+var PCOL = ["#C98A4B", "#B5763A", "#D9A066", "#A86A33", "#CF9459"];
+var COLS = 6, ROWS = 8, level = Math.max(1, +store("level") || 1);
+var planks, bolts, queue, boxes, spare, spareMax, start, cs = 44, busy = false;
+
+function rand(n) { return Math.floor(Math.random() * n); }
+function shuffle(a) { for (var i = a.length - 1; i > 0; i--) { var j = rand(i + 1), x = a[i]; a[i] = a[j]; a[j] = x; } return a; }
+function makeLevel() {
+  var np = Math.min(18, 3 * (2 + Math.floor(level / 2))), ncol = Math.min(6, 2 + Math.floor(level / 2));
+  planks = []; bolts = [];
+  for (var i = 0; i < np; i++) {
+    var len = 2 + rand(3), hor = Math.random() < 0.5, r, c;
+    if (hor) { r = rand(ROWS); c = rand(COLS - len + 1); } else { r = rand(ROWS - len + 1); c = rand(COLS); }
+    var p = { id: i, r: r, c: c, len: len, hor: hor, on: true, wood: PCOL[rand(PCOL.length)] };
+    planks.push(p);
+    var ends = [[r, c], hor ? [r, c + len - 1] : [r + len - 1, c]];
+    ends.forEach(function (e) { bolts.push({ id: bolts.length, p: i, r: e[0], c: e[1], col: 0, on: true }); });
+  }
+  var cols = []; for (i = 0; i < bolts.length / 3; i++) cols.push(i % ncol);
+  queue = shuffle(cols.slice());
+  var flat = []; cols.forEach(function (c) { flat.push(c, c, c); }); shuffle(flat);
+  bolts.forEach(function (b, k) { b.col = flat[k]; });
+  boxes = [queue.shift(), queue.shift()].map(function (c) { return { col: c, n: 0 }; });
+  spare = []; spareMax = 5; busy = false;
+  start = JSON.stringify({ planks: planks, bolts: bolts, queue: queue, boxes: boxes });
+  $("won").hidden = true; $("lost").hidden = true; say("Tap a bolt that isn't covered. Fill each box with 3 bolts of its color."); layout();
+}
+function covers(p, r, c) { return p.hor ? r === p.r && c >= p.c && c < p.c + p.len : c === p.c && r >= p.r && r < p.r + p.len; }
+function free(b) { return planks.every(function (p) { return !p.on || p.id <= b.p || !covers(p, b.r, b.c); }); }
+function tap(b) {
+  if (busy || !b.on) return;
+  if (!free(b)) { say("That bolt is under another plank"); return shakeBolt(b); }
+  var bx = boxes.filter(function (x) { return x && x.col === b.col && x.n < 3; })[0];
+  if (bx) bx.n++;
+  else if (spare.length < spareMax) spare.push(b.col);
+  else { say("Spare tray is full"); return shakeBolt(b); }
+  b.on = false;
+  var p = planks[b.p], dropped = null;
+  if (!bolts.some(function (x) { return x.on && x.p === p.id; })) { p.on = false; dropped = p.id; }
+  settle(); render(dropped);
+  if (!bolts.some(function (x) { return x.on; }) && !spare.length) return win();
+  stuckCheck();
+}
+function settle() {
+  var changed = true;
+  while (changed) {
+    changed = false;
+    boxes.forEach(function (bx, i) {
+      if (bx && bx.n >= 3) { boxes[i] = queue.length ? { col: queue.shift(), n: 0 } : null; changed = true; }
+    });
+    boxes.forEach(function (bx) {
+      if (!bx) return;
+      for (var k = 0; k < spare.length && bx.n < 3; k++) if (spare[k] === bx.col) { spare.splice(k, 1); k--; bx.n++; changed = true; }
+    });
+  }
+}
+function stuckCheck() {
+  if (spare.length < spareMax) return;
+  var ok = bolts.some(function (b) { return b.on && free(b) && boxes.some(function (x) { return x && x.col === b.col && x.n < 3; }); });
+  if (!ok) { busy = true; setTimeout(function () { $("lost").hidden = false; $("rescue").focus(); }, 350); }
+}
+function win() {
+  busy = true; post({ type: "levelComplete", level: level });
+  $("wonT").textContent = "Level " + level + " done!";
+  level++; store("level", level);
+  setTimeout(function () { $("won").hidden = false; $("next").focus(); }, 550);
+}
+
+function say(s) { $("msg").textContent = s; }
+function shakeBolt(b) { var el = document.querySelector('[data-b="' + b.id + '"]'); if (!el) return; el.classList.remove("no"); void el.offsetWidth; el.classList.add("no"); }
+function layout() {
+  var st = document.querySelector(".stage"), w = st.clientWidth - 32, h = st.clientHeight - 120;
+  cs = Math.max(30, Math.floor(Math.min(60, (w - 12) / COLS, (h - 12) / ROWS)));
+  render();
+}
+function render(dropped) {
+  var bd = $("board"), pad = 6; bd.style.width = (COLS * cs + pad * 2) + "px"; bd.style.height = (ROWS * cs + pad * 2) + "px"; bd.style.setProperty("--bz", Math.round(cs * 0.56) + "px");
+  bd.textContent = "";
+  planks.forEach(function (p) {
+    if (!p.on && p.id !== dropped) return;
+    var el = document.createElement("div"); el.className = "plank";
+    var w = (p.hor ? p.len : 1) * cs - 8, h = (p.hor ? 1 : p.len) * cs - 8;
+    el.style.left = (pad + p.c * cs + 4) + "px"; el.style.top = (pad + p.r * cs + 4) + "px"; el.style.width = w + "px"; el.style.height = h + "px";
+    el.style.setProperty("--c", p.wood); el.style.zIndex = p.id + 1;
+    var ends = [[0, 0], p.hor ? [0, p.len - 1] : [p.len - 1, 0]];
+    ends.forEach(function (e) {
+      var r = p.r + e[0], c = p.c + e[1], b = bolts.filter(function (x) { return x.p === p.id && x.r === r && x.c === c; })[0];
+      var x = (c - p.c) * cs + cs / 2 - 4, y = (r - p.r) * cs + cs / 2 - 4;
+      if (b && b.on) {
+        var bt = document.createElement("button"); bt.className = "bolt"; bt.dataset.b = b.id; bt.style.left = x + "px"; bt.style.top = y + "px";
+        bt.style.setProperty("--c", "var(" + COLORS[b.col] + ")");
+        bt.setAttribute("aria-label", CNAME[b.col] + " bolt" + (free(b) ? "" : ", covered"));
+        bt.addEventListener("click", function () { tap(b); });
+        el.appendChild(bt);
+      } else { var hl = document.createElement("span"); hl.className = "hole"; hl.style.left = x + "px"; hl.style.top = y + "px"; el.appendChild(hl); }
+    });
+    bd.appendChild(el);
+    if (p.id === dropped) requestAnimationFrame(function () { requestAnimationFrame(function () { el.classList.add("drop"); }); });
+  });
+  var bx = $("boxes"); bx.textContent = "";
+  boxes.forEach(function (b) {
+    var d = document.createElement("div"); d.className = "cbox";
+    if (!b) { d.style.setProperty("--c", "var(--well)"); d.setAttribute("aria-label", "Done"); }
+    else { d.style.setProperty("--c", "var(" + COLORS[b.col] + ")"); d.setAttribute("aria-label", CNAME[b.col] + " box, " + b.n + " of 3"); for (var i = 0; i < 3; i++) { var s = document.createElement("i"); if (i < b.n) s.className = "on"; d.appendChild(s); } }
+    bx.appendChild(d);
+  });
+  var sp = $("spare"); sp.textContent = "";
+  for (var i = 0; i < spareMax; i++) { var s = document.createElement("i"); if (spare[i] !== undefined) { s.className = "on"; s.style.setProperty("--c", "var(" + COLORS[spare[i]] + ")"); } if (i >= 5) s.classList.add("extra"); sp.appendChild(s); }
+  sp.setAttribute("aria-label", "Spare tray, " + spare.length + " of " + spareMax + " used");
+  $("left").textContent = bolts.filter(function (b) { return b.on; }).length + spare.length;
+  $("planks").textContent = planks.filter(function (p) { return p.on; }).length; $("level").textContent = level;
+  $("extra").disabled = spareMax >= 6;
+}
+
+$("restart").addEventListener("click", function () { var s = JSON.parse(start); planks = s.planks; bolts = s.bolts; queue = s.queue; boxes = s.boxes; spare = []; spareMax = 5; busy = false; say(""); render(); });
+$("extra").addEventListener("click", function () { if (spareMax >= 6) return; showAd("rewarded", "Watch to add a spare slot", function () { spareMax = 6; say("Extra spare slot added"); render(); }); });
+$("rescue").addEventListener("click", function () { $("lost").hidden = true; showAd("rewarded", "Watch to add a spare slot", function () { spareMax++; busy = false; render(); }); });
+$("retry").addEventListener("click", function () { $("lost").hidden = true; showAd("interstitial", "", function () { $("restart").click(); }); });
+$("next").addEventListener("click", function () { $("won").hidden = true; if ((level - 1) % 2 === 0) showAd("interstitial", "", makeLevel); else makeLevel(); });
+window.addEventListener("resize", function () { layout(); });
+makeLevel();
+})();
+</script>
+
+</body>
+</html>
